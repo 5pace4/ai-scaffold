@@ -32,7 +32,7 @@ def main(
 def new(
     project_name: str = typer.Argument(..., help="Name of the project to create."),
     profile: str = typer.Option(
-        "rag", "--profile", "-p", help="Project profile: minimal, rag, agent, full."
+        "minimal", "--profile", "-p", help="Project profile: minimal, rag, agent, full."
     ),
     llm: str | None = typer.Option(
         None,
