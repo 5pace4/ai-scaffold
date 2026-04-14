@@ -5,9 +5,9 @@ MINIMAL_MANIFEST = [
     "common.pyproject_toml",
     "common.readme",
     "common.claude_md",
-    "app.main",
-    "app.config",
-    "app.models",
+    "src.main",
+    "src.config",
+    "src.models",
 ]
 
 register_profile(

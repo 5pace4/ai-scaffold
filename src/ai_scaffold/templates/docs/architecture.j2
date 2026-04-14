@@ -17,30 +17,30 @@ Request → Security (input guard)
 
 ## Layers
 
-### API Layer (`app/main.py`)
+### API Layer (`src/main.py`)
 FastAPI application exposing `/query` and `/health` endpoints. All I/O is async.
 
 ### Security Layer
 Three-stage guard pipeline:
-1. **InputGuard** (`app/security/input_guard.py`) — validates query length, blocks prompt injection
-2. **ContentFilter** (`app/security/content_filter.py`) — filters retrieved documents for policy compliance
-3. **OutputFilter** (`app/security/output_filter.py`) — redacts PII from LLM responses
+1. **InputGuard** (`src/security/input_guard.py`) — validates query length, blocks prompt injection
+2. **ContentFilter** (`src/security/content_filter.py`) — filters retrieved documents for policy compliance
+3. **OutputFilter** (`src/security/output_filter.py`) — redacts PII from LLM responses
 
 {% if profile in ["rag", "full"] %}
-### Retrieval Layer (`app/components/`)
+### Retrieval Layer (`src/components/`)
 - **HybridRetriever** — combines dense vector search ({{ vector_db }}) with keyword matching
 - **Reranker** — LLM-based cross-encoder reranking for precision
 
-### Services Layer (`app/services/`)
+### Services Layer (`src/services/`)
 - **RAGPipeline** — orchestrates the full query → answer flow
 - **SemanticCache** — embedding-based cache to avoid redundant LLM calls
-- **ConversationMemory** — per-session multi-turn history
+- **ConversationService** — per-session multi-turn history
 - **QueryRewriter** — LLM-powered query expansion
 - **QueryRouter** — classifies queries into rag / agent / direct
 {% endif %}
 
 {% if profile in ["agent", "full"] %}
-### Agent Layer (`app/agents/`)
+### Agent Layer (`src/agents/`)
 - **DocumentGrader** — grades retrieved docs for relevance (self-correcting loop)
 - **QueryDecomposer** — breaks complex queries into sub-queries
 - **AdaptiveRouter** — routes to the right pipeline with fallback
@@ -74,7 +74,7 @@ Reranker.rerank()
 LLM.generate(context + query)
     │
     ▼
-OutputFilter.validate()
+OutputFilter.filter()
     │
     ▼
 SemanticCache.set()

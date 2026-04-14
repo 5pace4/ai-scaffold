@@ -1,0 +1,10 @@
+"""Vector search tool — semantic search against the {{ vector_db }} store."""
+
+from src.config import settings
+from src.models import Document
+
+
+async def vector_search(query: str, top_k: int = 10) -> list[Document]:
+    """Embed query and return top-k semantically similar documents."""
+    # TODO: embed query, call {{ vector_db }} similarity search
+    raise NotImplementedError

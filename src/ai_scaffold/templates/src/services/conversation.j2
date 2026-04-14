@@ -1,0 +1,28 @@
+"""Conversation service — manages multi-turn session history."""
+
+from src.models import QueryRequest, QueryResponse
+
+
+class ConversationService:
+    """Store and retrieve per-session message history."""
+
+    def __init__(self, max_history: int = 20) -> None:
+        self.max_history = max_history
+        self._store: dict[str, list[dict]] = {}
+
+    def get_history(self, session_id: str) -> list[dict]:
+        """Return message history for a session."""
+        return self._store.get(session_id, [])
+
+    def add_turn(self, session_id: str, request: QueryRequest, response: QueryResponse) -> None:
+        """Append a user/assistant turn to the session."""
+        history = self._store.setdefault(session_id, [])
+        history.append({"role": "user", "content": request.query})
+        history.append({"role": "assistant", "content": response.answer})
+        # Trim to max_history (pairs)
+        if len(history) > self.max_history * 2:
+            self._store[session_id] = history[-(self.max_history * 2):]
+
+    def clear(self, session_id: str) -> None:
+        """Delete history for a session."""
+        self._store.pop(session_id, None)

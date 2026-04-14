@@ -1,0 +1,17 @@
+"""Query decomposer — break complex queries into sub-questions."""
+
+from src.config import settings
+
+
+class QueryDecomposer:
+    """Decompose a compound query into simpler atomic sub-queries."""
+
+    async def decompose(self, query: str) -> list[str]:
+        """Return a list of sub-queries that together answer the original."""
+        # TODO: call {{ llm_provider }} with decomposition prompt
+        raise NotImplementedError
+
+    async def merge_answers(self, sub_answers: list[str]) -> str:
+        """Synthesise sub-answers into a single coherent response."""
+        # TODO: call {{ llm_provider }} with synthesis prompt
+        raise NotImplementedError

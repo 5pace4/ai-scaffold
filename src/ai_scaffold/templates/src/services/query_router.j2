@@ -1,0 +1,19 @@
+"""Query router — direct queries to the right pipeline or data source."""
+
+from src.config import settings
+
+
+class QueryRouter:
+    """Classify a query and route it to the appropriate handler."""
+
+    ROUTES = ["rag", "agent", "direct", "fallback"]
+
+    async def route(self, query: str) -> str:
+        """Return one of ROUTES indicating how to handle the query."""
+        # TODO: use LLM classifier or keyword rules to determine route
+        raise NotImplementedError
+
+    async def classify_intent(self, query: str) -> dict:
+        """Return intent label and confidence score."""
+        # TODO: call {{ llm_provider }} with intent classification prompt
+        raise NotImplementedError

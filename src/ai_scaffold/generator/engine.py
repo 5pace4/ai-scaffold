@@ -13,7 +13,6 @@ class ManifestEntry:
     template_key: str
     template_file: str
     output_path: str
-    # If any flag name in this set is False on the context, this file is skipped
     requires: set[str] = field(default_factory=set)
 
 
@@ -60,122 +59,122 @@ MANIFEST_MAP: dict[str, ManifestEntry] = {
         template_file="common/claude/rules/testing.j2",
         output_path=".claude/rules/testing.md",
     ),
-    # ── App core ──────────────────────────────────────────────────────────────
-    "app.main": ManifestEntry(
-        template_key="app.main",
-        template_file="app/main.j2",
-        output_path="app/main.py",
+    # ── src core ──────────────────────────────────────────────────────────────
+    "src.main": ManifestEntry(
+        template_key="src.main",
+        template_file="src/main.j2",
+        output_path="src/main.py",
     ),
-    "app.config": ManifestEntry(
-        template_key="app.config",
-        template_file="app/config.j2",
-        output_path="app/config.py",
+    "src.config": ManifestEntry(
+        template_key="src.config",
+        template_file="src/config.j2",
+        output_path="src/config.py",
     ),
-    "app.models": ManifestEntry(
-        template_key="app.models",
-        template_file="app/models.j2",
-        output_path="app/models.py",
+    "src.models": ManifestEntry(
+        template_key="src.models",
+        template_file="src/models.j2",
+        output_path="src/models.py",
     ),
-    "app.dockerfile": ManifestEntry(
-        template_key="app.dockerfile",
-        template_file="app/dockerfile.j2",
-        output_path="app/Dockerfile",
+    "src.dockerfile": ManifestEntry(
+        template_key="src.dockerfile",
+        template_file="src/dockerfile.j2",
+        output_path="Dockerfile",
         requires={"include_docker"},
     ),
     # ── Components ────────────────────────────────────────────────────────────
-    "app.components.hybrid_retriever": ManifestEntry(
-        template_key="app.components.hybrid_retriever",
-        template_file="app/components/hybrid_retriever.j2",
-        output_path="app/components/hybrid_retriever.py",
+    "src.components.hybrid_retriever": ManifestEntry(
+        template_key="src.components.hybrid_retriever",
+        template_file="src/components/hybrid_retriever.j2",
+        output_path="src/components/hybrid_retriever.py",
     ),
-    "app.components.reranker": ManifestEntry(
-        template_key="app.components.reranker",
-        template_file="app/components/reranker.j2",
-        output_path="app/components/reranker.py",
+    "src.components.reranker": ManifestEntry(
+        template_key="src.components.reranker",
+        template_file="src/components/reranker.j2",
+        output_path="src/components/reranker.py",
     ),
     # ── Services ──────────────────────────────────────────────────────────────
-    "app.services.rag_pipeline": ManifestEntry(
-        template_key="app.services.rag_pipeline",
-        template_file="app/services/rag_pipeline.j2",
-        output_path="app/services/rag_pipeline.py",
+    "src.services.rag_pipeline": ManifestEntry(
+        template_key="src.services.rag_pipeline",
+        template_file="src/services/rag_pipeline.j2",
+        output_path="src/services/rag_pipeline.py",
     ),
-    "app.services.semantic_cache": ManifestEntry(
-        template_key="app.services.semantic_cache",
-        template_file="app/services/semantic_cache.j2",
-        output_path="app/services/semantic_cache.py",
+    "src.services.semantic_cache": ManifestEntry(
+        template_key="src.services.semantic_cache",
+        template_file="src/services/semantic_cache.j2",
+        output_path="src/services/semantic_cache.py",
     ),
-    "app.services.conversation": ManifestEntry(
-        template_key="app.services.conversation",
-        template_file="app/services/conversation.j2",
-        output_path="app/services/conversation.py",
+    "src.services.conversation": ManifestEntry(
+        template_key="src.services.conversation",
+        template_file="src/services/conversation.j2",
+        output_path="src/services/conversation.py",
     ),
-    "app.services.query_rewriter": ManifestEntry(
-        template_key="app.services.query_rewriter",
-        template_file="app/services/query_rewriter.j2",
-        output_path="app/services/query_rewriter.py",
+    "src.services.query_rewriter": ManifestEntry(
+        template_key="src.services.query_rewriter",
+        template_file="src/services/query_rewriter.j2",
+        output_path="src/services/query_rewriter.py",
     ),
-    "app.services.query_router": ManifestEntry(
-        template_key="app.services.query_router",
-        template_file="app/services/query_router.j2",
-        output_path="app/services/query_router.py",
+    "src.services.query_router": ManifestEntry(
+        template_key="src.services.query_router",
+        template_file="src/services/query_router.j2",
+        output_path="src/services/query_router.py",
     ),
     # ── Prompts ───────────────────────────────────────────────────────────────
-    "app.prompts.templates": ManifestEntry(
-        template_key="app.prompts.templates",
-        template_file="app/prompts/templates.j2",
-        output_path="app/prompts/templates.py",
+    "src.prompts.templates": ManifestEntry(
+        template_key="src.prompts.templates",
+        template_file="src/prompts/templates.j2",
+        output_path="src/prompts/templates.py",
     ),
-    "app.prompts.registry": ManifestEntry(
-        template_key="app.prompts.registry",
-        template_file="app/prompts/registry.j2",
-        output_path="app/prompts/registry.py",
+    "src.prompts.registry": ManifestEntry(
+        template_key="src.prompts.registry",
+        template_file="src/prompts/registry.j2",
+        output_path="src/prompts/registry.py",
     ),
     # ── Agents ────────────────────────────────────────────────────────────────
-    "app.agents.document_grader": ManifestEntry(
-        template_key="app.agents.document_grader",
-        template_file="app/agents/document_grader.j2",
-        output_path="app/agents/document_grader.py",
+    "src.agents.document_grader": ManifestEntry(
+        template_key="src.agents.document_grader",
+        template_file="src/agents/document_grader.j2",
+        output_path="src/agents/document_grader.py",
     ),
-    "app.agents.query_decomposer": ManifestEntry(
-        template_key="app.agents.query_decomposer",
-        template_file="app/agents/query_decomposer.j2",
-        output_path="app/agents/query_decomposer.py",
+    "src.agents.query_decomposer": ManifestEntry(
+        template_key="src.agents.query_decomposer",
+        template_file="src/agents/query_decomposer.j2",
+        output_path="src/agents/query_decomposer.py",
     ),
-    "app.agents.adaptive_router": ManifestEntry(
-        template_key="app.agents.adaptive_router",
-        template_file="app/agents/adaptive_router.j2",
-        output_path="app/agents/adaptive_router.py",
+    "src.agents.adaptive_router": ManifestEntry(
+        template_key="src.agents.adaptive_router",
+        template_file="src/agents/adaptive_router.j2",
+        output_path="src/agents/adaptive_router.py",
     ),
-    "app.agents.tools.web_search": ManifestEntry(
-        template_key="app.agents.tools.web_search",
-        template_file="app/agents/tools/web_search.j2",
-        output_path="app/agents/tools/web_search.py",
+    "src.agents.tools.web_search": ManifestEntry(
+        template_key="src.agents.tools.web_search",
+        template_file="src/agents/tools/web_search.j2",
+        output_path="src/agents/tools/web_search.py",
     ),
-    "app.agents.tools.code_search": ManifestEntry(
-        template_key="app.agents.tools.code_search",
-        template_file="app/agents/tools/code_search.j2",
-        output_path="app/agents/tools/code_search.py",
+    "src.agents.tools.code_search": ManifestEntry(
+        template_key="src.agents.tools.code_search",
+        template_file="src/agents/tools/code_search.j2",
+        output_path="src/agents/tools/code_search.py",
     ),
-    "app.agents.tools.vector_search": ManifestEntry(
-        template_key="app.agents.tools.vector_search",
-        template_file="app/agents/tools/vector_search.j2",
-        output_path="app/agents/tools/vector_search.py",
+    "src.agents.tools.vector_search": ManifestEntry(
+        template_key="src.agents.tools.vector_search",
+        template_file="src/agents/tools/vector_search.j2",
+        output_path="src/agents/tools/vector_search.py",
     ),
     # ── Security ──────────────────────────────────────────────────────────────
-    "app.security.input_guard": ManifestEntry(
-        template_key="app.security.input_guard",
-        template_file="app/security/input_guard.j2",
-        output_path="app/security/input_guard.py",
+    "src.security.input_guard": ManifestEntry(
+        template_key="src.security.input_guard",
+        template_file="src/security/input_guard.j2",
+        output_path="src/security/input_guard.py",
     ),
-    "app.security.content_filter": ManifestEntry(
-        template_key="app.security.content_filter",
-        template_file="app/security/content_filter.j2",
-        output_path="app/security/content_filter.py",
+    "src.security.content_filter": ManifestEntry(
+        template_key="src.security.content_filter",
+        template_file="src/security/content_filter.j2",
+        output_path="src/security/content_filter.py",
     ),
-    "app.security.output_filter": ManifestEntry(
-        template_key="app.security.output_filter",
-        template_file="app/security/output_filter.j2",
-        output_path="app/security/output_filter.py",
+    "src.security.output_filter": ManifestEntry(
+        template_key="src.security.output_filter",
+        template_file="src/security/output_filter.j2",
+        output_path="src/security/output_filter.py",
     ),
     # ── Evaluation ────────────────────────────────────────────────────────────
     "evaluation.golden_dataset": ManifestEntry(

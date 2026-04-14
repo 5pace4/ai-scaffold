@@ -1,0 +1,23 @@
+"""RAG pipeline — orchestrates retrieval, reranking, and generation."""
+
+from src.components.hybrid_retriever import HybridRetriever
+from src.config import Settings
+from src.models import Document
+
+
+class RAGPipeline:
+    """End-to-end retrieval-augmented generation pipeline."""
+
+    def __init__(self, settings: Settings) -> None:
+        self.settings = settings
+        self.retriever = HybridRetriever()
+
+    async def run(self, query: str, session_id: str | None = None) -> str:
+        """Retrieve context, build prompt, and generate an answer."""
+        # TODO: retrieve -> rerank -> build prompt -> call LLM
+        raise NotImplementedError
+
+    async def ingest(self, documents: list[Document]) -> None:
+        """Index documents into {{ vector_db }}."""
+        # TODO: chunk, embed, and upsert into vector store
+        raise NotImplementedError

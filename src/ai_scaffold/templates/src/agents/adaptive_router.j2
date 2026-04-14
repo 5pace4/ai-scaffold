@@ -1,0 +1,17 @@
+"""Adaptive router — LLM-driven routing with self-correction loop."""
+
+from src.config import settings
+from src.services.query_router import QueryRouter
+
+
+class AdaptiveRouter:
+    """Route queries dynamically; retry with a different strategy on failure."""
+
+    def __init__(self, settings) -> None:
+        self.settings = settings
+        self.router = QueryRouter()
+
+    async def route(self, query: str, max_retries: int = 2) -> str:
+        """Route query, retrying with fallback strategies on error."""
+        # TODO: call router.route(), dispatch to handler, handle retries
+        raise NotImplementedError

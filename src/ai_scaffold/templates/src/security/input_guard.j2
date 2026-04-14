@@ -1,0 +1,16 @@
+"""Input guard — validate and sanitise incoming user queries."""
+
+
+class InputGuard:
+    """Block or sanitise requests before they reach the pipeline."""
+
+    MAX_LENGTH = 4096
+
+    def validate(self, query: str) -> str:
+        """Raise ValueError for invalid input; return sanitised query."""
+        if not query or not query.strip():
+            raise ValueError("Query must not be empty.")
+        if len(query) > self.MAX_LENGTH:
+            raise ValueError(f"Query exceeds maximum length of {self.MAX_LENGTH} characters.")
+        # TODO: add injection detection, PII scrubbing, language filtering
+        return query.strip()

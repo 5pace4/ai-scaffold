@@ -1,0 +1,15 @@
+"""Content filter — detect harmful or policy-violating content."""
+
+
+class ContentFilter:
+    """Screen text for harmful, offensive, or restricted content."""
+
+    async def is_safe(self, text: str) -> bool:
+        """Return True if the text passes all safety checks."""
+        # TODO: call moderation API (e.g. OpenAI moderation, Anthropic guardrails)
+        raise NotImplementedError
+
+    async def classify(self, text: str) -> dict[str, float]:
+        """Return a dict of category -> probability scores."""
+        # TODO: multi-label classification across harm categories
+        raise NotImplementedError

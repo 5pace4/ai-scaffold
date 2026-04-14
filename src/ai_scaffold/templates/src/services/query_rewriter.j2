@@ -1,0 +1,17 @@
+"""Query rewriter — expand or clarify queries before retrieval."""
+
+from src.config import settings
+
+
+class QueryRewriter:
+    """Use an LLM to rewrite or decompose a user query for better retrieval."""
+
+    async def rewrite(self, query: str, history: list[dict] | None = None) -> str:
+        """Return a rewritten version of the query."""
+        # TODO: call {{ llm_provider }} with rewrite prompt
+        raise NotImplementedError
+
+    async def expand(self, query: str) -> list[str]:
+        """Return multiple query variants for ensemble retrieval."""
+        # TODO: generate N query paraphrases
+        raise NotImplementedError

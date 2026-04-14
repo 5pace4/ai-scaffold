@@ -12,18 +12,18 @@
 
 | File | Purpose |
 |---|---|
-| `app/config.py` | All settings — read this first |
-| `app/models.py` | API schemas |
+| `src/config.py` | All settings — read this first |
+| `src/models.py` | API schemas |
 {% if profile in ["rag", "full"] %}
-| `app/services/rag_pipeline.py` | Main RAG orchestration |
-| `app/components/hybrid_retriever.py` | Retrieval logic |
-| `app/services/semantic_cache.py` | Cache layer |
-| `app/security/input_guard.py` | Input validation |
+| `src/services/rag_pipeline.py` | Main RAG orchestration |
+| `src/components/hybrid_retriever.py` | Retrieval logic |
+| `src/services/semantic_cache.py` | Cache layer |
+| `src/security/input_guard.py` | Input validation |
 {% endif %}
 {% if profile in ["agent", "full"] %}
-| `app/agents/document_grader.py` | Doc relevance grading |
-| `app/agents/adaptive_router.py` | Query routing |
-| `app/agents/tools/` | Tool implementations |
+| `src/agents/document_grader.py` | Doc relevance grading |
+| `src/agents/adaptive_router.py` | Query routing |
+| `src/agents/tools/` | Tool implementations |
 {% endif %}
 
 ## Running Tests
@@ -35,6 +35,6 @@ uv run pytest tests/ -v
 ## Linting & Type Checking
 
 ```bash
-uv run ruff check app/ tests/
-uv run mypy app/
+uv run ruff check src/ tests/
+uv run mypy src/
 ```

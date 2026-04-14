@@ -9,8 +9,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from langchain_core.documents import Document
 
-from app.components.hybrid_retriever import HybridRetriever
-from app.config import settings
+from src.components.hybrid_retriever import HybridRetriever
+from src.config import settings
 
 SAMPLE_DOCS = [
     Document(page_content="Welcome to {{ project_name }}. This is a sample document.", metadata={"source": "seed"}),

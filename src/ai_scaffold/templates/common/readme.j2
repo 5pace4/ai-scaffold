@@ -14,7 +14,7 @@ cp .env.example .env
 uv sync
 
 # 3. Start the API
-uv run uvicorn app.main:app --reload
+uv run uvicorn src.main:app --reload
 ```
 
 API docs available at http://localhost:8000/docs
@@ -23,7 +23,7 @@ API docs available at http://localhost:8000/docs
 
 ```
 {{ project_name }}/
-├── app/
+├── src/
 │   ├── main.py          # FastAPI entry point
 │   ├── config.py        # Settings (pydantic-settings + .env)
 │   ├── models.py        # Request / response schemas
@@ -73,8 +73,8 @@ DATABASE_URL=postgresql://user:pass@localhost:5432/{{ package_name }}
 
 ```bash
 uv run pytest                    # run tests
-uv run ruff check app/ tests/    # lint
-uv run mypy app/                 # type check
+uv run ruff check src/ tests/    # lint
+uv run mypy src/                 # type check
 ```
 
 ## License

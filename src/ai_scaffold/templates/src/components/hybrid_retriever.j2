@@ -1,0 +1,25 @@
+"""Hybrid retriever — combines dense (vector) and sparse (BM25) search."""
+
+from src.config import settings
+from src.models import Document
+
+
+class HybridRetriever:
+    """Merge dense and sparse retrieval results with reciprocal rank fusion."""
+
+    def __init__(self, alpha: float = 0.5) -> None:
+        # alpha=1.0 → pure dense, alpha=0.0 → pure sparse
+        self.alpha = alpha
+
+    async def retrieve(self, query: str, top_k: int = 10) -> list[Document]:
+        """Return top-k documents ranked by hybrid score."""
+        # TODO: implement dense + sparse retrieval
+        raise NotImplementedError
+
+    async def _dense_search(self, query: str, top_k: int) -> list[Document]:
+        # TODO: embed query and search {{ vector_db }}
+        raise NotImplementedError
+
+    async def _sparse_search(self, query: str, top_k: int) -> list[Document]:
+        # TODO: BM25 / keyword search
+        raise NotImplementedError

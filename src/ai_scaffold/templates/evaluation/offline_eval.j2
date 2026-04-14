@@ -6,8 +6,8 @@ import json
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from app.config import settings
-from app.services.rag_pipeline import RAGPipeline
+from src.config import settings
+from src.services.rag_pipeline import RAGPipeline
 
 GOLDEN_DATASET = Path(__file__).parent / "golden_dataset.json"
 RESULTS_DIR = Path(__file__).parent / "eval_results"

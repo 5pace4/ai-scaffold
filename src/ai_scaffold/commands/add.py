@@ -26,13 +26,13 @@ ADDABLE_COMPONENTS: dict[str, str] = {
 }
 
 COMPONENT_MANIFEST: dict[str, list[str]] = {
-    "semantic-cache": ["app.services.semantic_cache"],
-    "reranker": ["app.components.reranker"],
+    "semantic-cache": ["src.services.semantic_cache"],
+    "reranker": ["src.components.reranker"],
     "cost-tracker": ["observability.cost_tracker"],
     "agent-tools": [
-        "app.agents.tools.web_search",
-        "app.agents.tools.code_search",
-        "app.agents.tools.vector_search",
+        "src.agents.tools.web_search",
+        "src.agents.tools.code_search",
+        "src.agents.tools.vector_search",
     ],
     "observability": [
         "observability.tracer",

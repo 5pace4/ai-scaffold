@@ -1,0 +1,15 @@
+"""Output filter — sanitise LLM responses before returning to the user."""
+
+
+class OutputFilter:
+    """Remove PII, citations to blocked sources, or unsafe content from LLM output."""
+
+    async def filter(self, text: str) -> str:
+        """Return a cleaned version of the LLM output."""
+        # TODO: apply PII redaction, hallucination flags, source validation
+        return text
+
+    def redact_pii(self, text: str) -> str:
+        """Replace detected PII with redaction placeholders."""
+        # TODO: integrate NER or regex-based PII detector
+        return text

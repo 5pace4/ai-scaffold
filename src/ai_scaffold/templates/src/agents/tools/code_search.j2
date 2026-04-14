@@ -1,0 +1,7 @@
+"""Code search tool — search a code repository or index."""
+
+
+async def code_search(query: str, repo_path: str | None = None, top_k: int = 5) -> list[dict]:
+    """Search code and return list of dicts with file, line, snippet."""
+    # TODO: integrate code search backend (e.g. tree-sitter index, GitHub search)
+    raise NotImplementedError

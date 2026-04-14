@@ -1,0 +1,28 @@
+"""Prompt registry — central lookup for all prompt templates."""
+
+from src.prompts.templates import (
+    INTENT_SYSTEM,
+    RAG_SYSTEM,
+    RAG_USER,
+    REWRITE_SYSTEM,
+)
+
+_REGISTRY: dict[str, str] = {
+    "rag.system": RAG_SYSTEM,
+    "rag.user": RAG_USER,
+    "rewrite.system": REWRITE_SYSTEM,
+    "intent.system": INTENT_SYSTEM,
+}
+
+
+def get(key: str) -> str:
+    """Return a registered prompt template by key."""
+    try:
+        return _REGISTRY[key]
+    except KeyError as exc:
+        raise KeyError(f"Unknown prompt key: {key!r}. Available: {list(_REGISTRY)}") from exc
+
+
+def register(key: str, template: str) -> None:
+    """Add or override a prompt template at runtime."""
+    _REGISTRY[key] = template

@@ -1,0 +1,21 @@
+"""Document grader — assess retrieved document relevance."""
+
+from src.config import settings
+from src.models import Document
+
+
+class DocumentGrader:
+    """Use an LLM to score each retrieved document for relevance."""
+
+    async def grade(self, query: str, document: Document) -> bool:
+        """Return True if the document is relevant to the query."""
+        # TODO: call {{ llm_provider }} with grading prompt
+        raise NotImplementedError
+
+    async def filter_relevant(self, query: str, documents: list[Document]) -> list[Document]:
+        """Return only documents graded as relevant."""
+        results = []
+        for doc in documents:
+            if await self.grade(query, doc):
+                results.append(doc)
+        return results

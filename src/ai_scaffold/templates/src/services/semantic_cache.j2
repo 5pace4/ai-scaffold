@@ -1,0 +1,25 @@
+"""Semantic cache — avoid redundant LLM calls for similar queries."""
+
+from src.config import settings
+
+
+class SemanticCache:
+    """Cache LLM responses indexed by query embedding similarity."""
+
+    def __init__(self, threshold: float = 0.95) -> None:
+        self.threshold = threshold
+
+    async def get(self, query: str) -> str | None:
+        """Return a cached answer if a semantically similar query exists."""
+        # TODO: embed query, search cache index, return hit above threshold
+        raise NotImplementedError
+
+    async def set(self, query: str, answer: str) -> None:
+        """Store a query-answer pair in the semantic cache."""
+        # TODO: embed query and upsert into cache store
+        raise NotImplementedError
+
+    async def invalidate(self, pattern: str | None = None) -> int:
+        """Flush cache entries matching pattern (or all if pattern is None)."""
+        # TODO: delete matched entries, return count
+        raise NotImplementedError

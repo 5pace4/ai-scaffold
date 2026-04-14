@@ -11,7 +11,7 @@ This is a **{{ profile }} profile** AI application using:
 ## Architecture
 
 ```
-app/
+src/
 ├── main.py          Entry point — FastAPI app, routers, lifespan
 ├── config.py        All settings via pydantic-settings (reads .env)
 ├── models.py        Request/response Pydantic schemas
@@ -39,7 +39,7 @@ app/
 
 ## Key Conventions
 
-- All settings come from `app/config.py` → `settings` singleton. Never hardcode API keys.
+- All settings come from `src/config.py` → `settings` singleton. Never hardcode API keys.
 - Models use Pydantic v2. Prefer `model_validate` over `parse_obj`.
 - Async-first: all I/O-bound functions should be `async def`.
 - Tests live in `tests/` and use pytest. Run with `uv run pytest`.
@@ -49,5 +49,5 @@ app/
 ```bash
 cp .env.example .env   # fill in API keys
 uv sync
-uv run uvicorn app.main:app --reload
+uv run uvicorn src.main:app --reload
 ```

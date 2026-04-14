@@ -5,69 +5,32 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from app.config import settings
+from src.config import settings
+from src.models import Document
 
 
 @pytest.fixture
-def mock_retriever():
-    from langchain_core.documents import Document
-    retriever = AsyncMock()
-    retriever.retrieve.return_value = MagicMock(
-        documents=[Document(page_content="Test document content.", metadata={"source": "test"})],
-        scores=[0.95],
-    )
-    return retriever
+def mock_documents() -> list[Document]:
+    return [
+        Document(id="1", content="Test document content.", metadata={"source": "test"}),
+        Document(id="2", content="Another test document.", metadata={"source": "test"}),
+    ]
 
 
 @pytest.mark.asyncio
-async def test_retriever_returns_documents(mock_retriever):
-    result = await mock_retriever.retrieve("test query")
-    assert len(result.documents) > 0
-    assert result.documents[0].page_content == "Test document content."
+async def test_retriever_returns_documents(mock_documents):
+    with patch("src.components.hybrid_retriever.HybridRetriever.retrieve", new_callable=AsyncMock) as mock_retrieve:
+        mock_retrieve.return_value = mock_documents
+        from src.components.hybrid_retriever import HybridRetriever
+
+        retriever = HybridRetriever()
+        result = await retriever.retrieve("test query")
+        assert len(result) > 0
 
 
 @pytest.mark.asyncio
-async def test_retriever_empty_query(mock_retriever):
-    mock_retriever.retrieve.return_value = MagicMock(documents=[], scores=[])
-    result = await mock_retriever.retrieve("")
-    assert result.documents == []
+async def test_rag_pipeline_initialized():
+    from src.services.rag_pipeline import RAGPipeline
 
-
-@pytest.mark.asyncio
-async def test_rag_pipeline_returns_string():
-    with (
-        patch("app.services.rag_pipeline.HybridRetriever") as mock_hr,
-        patch("app.services.rag_pipeline.Reranker") as mock_rr,
-        patch("app.services.rag_pipeline.SemanticCache") as mock_cache,
-        patch("app.services.rag_pipeline.QueryRewriter") as mock_qr,
-    ):
-        from langchain_core.documents import Document
-
-        mock_hr.return_value.retrieve = AsyncMock(
-            return_value=MagicMock(documents=[Document(page_content="Answer context.")], scores=[0.9])
-        )
-        mock_rr.return_value.rerank = AsyncMock(
-            return_value=[Document(page_content="Answer context.")]
-        )
-        mock_cache.return_value.get = AsyncMock(return_value=None)
-        mock_cache.return_value.set = AsyncMock()
-        mock_qr.return_value.rewrite = AsyncMock(return_value="rewritten query")
-
-        from app.services.rag_pipeline import RAGPipeline
-
-        pipeline = RAGPipeline.__new__(RAGPipeline)
-        pipeline.settings = settings
-        pipeline.retriever = mock_hr.return_value
-        pipeline.reranker = mock_rr.return_value
-        pipeline.cache = mock_cache.return_value
-        pipeline.rewriter = mock_qr.return_value
-
-        with patch.object(pipeline, "_build_llm", return_value=AsyncMock()):
-            pipeline._llm = AsyncMock()
-            mock_chain = AsyncMock()
-            mock_chain.ainvoke = AsyncMock(return_value=MagicMock(content="Generated answer."))
-            with patch("app.services.rag_pipeline.RAGPipeline._PROMPT", new=MagicMock(__or__=lambda s, o: mock_chain)):
-                # This test validates the pipeline structure, not the LLM output
-                pass
-
-        assert isinstance(settings.app_name, str)
+    pipeline = RAGPipeline(settings)
+    assert pipeline.settings is settings
