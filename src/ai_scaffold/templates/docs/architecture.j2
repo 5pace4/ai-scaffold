@@ -1,84 +1,113 @@
 # {{ project_name }} — Architecture
 
-## Overview
-
 **Profile:** `{{ profile }}` | **LLM:** `{{ llm_provider }}` | **Vector DB:** `{{ vector_db }}`
 
-This application follows a layered clean architecture:
+## Layer Overview
 
 ```
-Request → Security (input guard)
-        → Services (routing, rewriting, caching)
-        → Components (retrieval, reranking)
-        → LLM ({{ llm_provider }}/{{ llm_model }})
-        → Security (output filter)
-        → Response
-```
-
-## Layers
-
-### API Layer (`src/main.py`)
-FastAPI application exposing `/query` and `/health` endpoints. All I/O is async.
-
-### Security Layer
-Three-stage guard pipeline:
-1. **InputGuard** (`src/security/input_guard.py`) — validates query length, blocks prompt injection
-2. **ContentFilter** (`src/security/content_filter.py`) — filters retrieved documents for policy compliance
-3. **OutputFilter** (`src/security/output_filter.py`) — redacts PII from LLM responses
-
+HTTP Request
+    │
+    ▼
+src/api/          Routes → Controllers → Schemas
+    │
+    ▼
+src/guardrails/   Input validation & content filtering  (agent/full)
+    │
+    ▼
+src/cache/        Semantic cache (Redis) — return early on cache hit
+    │ cache miss
+    ▼
 {% if profile in ["rag", "full"] %}
-### Retrieval Layer (`src/components/`)
-- **HybridRetriever** — combines dense vector search ({{ vector_db }}) with keyword matching
-- **Reranker** — LLM-based cross-encoder reranking for precision
-
-### Services Layer (`src/services/`)
-- **RAGPipeline** — orchestrates the full query → answer flow
-- **SemanticCache** — embedding-based cache to avoid redundant LLM calls
-- **ConversationService** — per-session multi-turn history
-- **QueryRewriter** — LLM-powered query expansion
-- **QueryRouter** — classifies queries into rag / agent / direct
+src/rag/          Query rewrite → Retrieval → Rerank → Generate
+  ├── src/embedding/     Embed query
+  ├── src/vectorstore/   Top-k search ({{ vector_db }})
+  └── src/ingestion/     (offline) Load → Chunk → Clean → Index
 {% endif %}
-
 {% if profile in ["agent", "full"] %}
-### Agent Layer (`src/agents/`)
-- **DocumentGrader** — grades retrieved docs for relevance (self-correcting loop)
-- **QueryDecomposer** — breaks complex queries into sub-queries
-- **AdaptiveRouter** — routes to the right pipeline with fallback
-- **Tools** — pluggable tool definitions (web search, code search, vector search)
+src/workflows/    Agent loop (ReAct / Planner-Executor / Multi-agent)
+  ├── src/agents/        Agent definitions
+  ├── src/tools/         Pluggable tools
+  ├── src/memory/        Short-term + long-term memory
+  └── src/retrieval/     RAG subsystem for agents
 {% endif %}
-
-## Data Flow
-
-```
-User Query
     │
     ▼
-InputGuard.validate()
-    │
-    ▼
-SemanticCache.get()  ──── HIT ──→  Return cached answer
-    │ MISS
-    ▼
-QueryRewriter.rewrite()
-    │
-    ▼
-HybridRetriever.retrieve()
-    │
-    ▼
-ContentFilter.filter()
-    │
-    ▼
-Reranker.rerank()
-    │
-    ▼
-LLM.generate(context + query)
-    │
-    ▼
-OutputFilter.filter()
-    │
-    ▼
-SemanticCache.set()
+src/monitoring/   Trace spans + Prometheus metrics
     │
     ▼
 Response
 ```
+
+## Modules
+{% if profile in ["rag", "full"] %}
+### Ingestion (`src/ingestion/`)
+Offline pipeline to prepare documents for retrieval.
+- `loader.py` — load from PDF, web, files, databases
+- `chunker.py` — split documents into retrieval chunks
+- `cleaner.py` — normalise, deduplicate, filter noise
+
+### Embedding (`src/embedding/`)
+- `embedder.py` — wraps the `{{ embedding_model }}` model; produces vectors
+- `utils.py` — batching helpers and similarity utilities
+
+### Vector Store (`src/vectorstore/`)
+Interfaces with `{{ vector_db }}`.
+- `client.py` — connection management
+- `indexer.py` — batch upsert embeddings
+- `retriever.py` — top-k similarity search
+
+### RAG Core (`src/rag/`)
+End-to-end retrieval-augmented generation.
+- `pipeline.py` — orchestrates retrieve → rerank → generate
+- `prompt.py` — prompt templates and formatters
+- `generator.py` — `{{ llm_provider }}` / `{{ llm_model }}` wrapper
+{% endif %}
+{% if profile in ["agent", "full"] %}
+### Agents (`src/agents/`)
+- `base_agent.py` — abstract agent interface
+- `chat_agent.py` — conversational agent
+- `planner_agent.py` — decomposes goals into tasks
+- `executor_agent.py` — executes tool-use actions
+
+### Tools (`src/tools/`)
+Pluggable capability extensions for agents.
+- `web_search.py` — live internet search
+- `calculator.py` — safe arithmetic evaluation
+- `db_tool.py` — structured database queries
+- `rag_tool.py` — RAG retrieval as a tool
+
+### LLM (`src/llm/`)
+- `client.py` — unified `{{ llm_provider }}` client
+- `prompts.py` — prompt construction helpers
+- `output_parser.py` — structured output parsing
+
+### Memory (`src/memory/`)
+- `short_term.py` — conversation buffer
+- `long_term.py` — vector DB knowledge store
+- `episodic.py` — task / session memory
+
+### Workflows (`src/workflows/`)
+- `agent_loop.py` — ReAct think → act → observe loop
+- `planner_executor.py` — Plan → Execute pattern
+- `multi_agent.py` — multi-agent coordination
+{% endif %}
+
+### API (`src/api/`)
+FastAPI layer.
+- `routes.py` — endpoint definitions
+- `schemas.py` — Pydantic request / response models
+- `controllers.py` — business logic called by routes
+
+### Cache (`src/cache/`)
+- `redis_client.py` — Redis connection and semantic cache helpers
+
+### Monitoring (`src/monitoring/`)
+- `tracing.py` — OpenTelemetry span instrumentation
+- `metrics.py` — Prometheus counter / histogram definitions
+
+### Config (`src/configs/`)
+- `config.py` — `Settings` class (pydantic-settings, reads `.env`)
+
+### Utils (`src/utils/`)
+- `logger.py` — structured logging setup
+- `helpers.py` — shared utilities

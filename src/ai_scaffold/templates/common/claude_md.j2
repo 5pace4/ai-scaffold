@@ -2,52 +2,53 @@
 
 ## Project Overview
 
-This is a **{{ profile }} profile** AI application using:
+- **Profile:** {{ profile }}
 - **LLM:** {{ llm_provider }} / {{ llm_model }}
 - **Vector DB:** {{ vector_db }}
 - **Embeddings:** {{ embedding_model }}
-- **Framework:** FastAPI + pydantic-settings
 
-## Architecture
+## Source Layout
 
 ```
 src/
-├── main.py          Entry point — FastAPI app, routers, lifespan
-├── config.py        All settings via pydantic-settings (reads .env)
-├── models.py        Request/response Pydantic schemas
+├── main.py               Entry point
+├── configs/config.py     All settings — load env vars here, never hardcode
+├── dependencies.py       Dependency injection (FastAPI Depends)
 {% if profile in ["rag", "full"] %}
-├── components/      Low-level retrieval primitives
-│   ├── hybrid_retriever.py   Combines dense + sparse search
-│   └── reranker.py           Cross-encoder reranking
-├── services/        Orchestration layer
-│   ├── rag_pipeline.py       End-to-end query → answer
-│   ├── semantic_cache.py     Embedding-based result cache
-│   ├── conversation.py       Multi-turn memory management
-│   ├── query_rewriter.py     LLM-powered query expansion
-│   └── query_router.py       Route queries to right pipeline
-├── prompts/         Versioned prompt management
-└── security/        Three-layer guard: input → content → output
+├── ingestion/            loader → chunker → cleaner
+├── embedding/            embedder wraps the embedding model
+├── vectorstore/          client / indexer / retriever for {{ vector_db }}
+├── rag/                  pipeline → prompt → generator (end-to-end RAG)
+├── evaluation/           metrics and evaluator
 {% endif %}
 {% if profile in ["agent", "full"] %}
-├── agents/          Agentic layer with self-correction
-│   ├── document_grader.py    Grade retrieved docs for relevance
-│   ├── query_decomposer.py   Break complex queries into sub-queries
-│   ├── adaptive_router.py    LLM-driven pipeline selection
-│   └── tools/               Pluggable tool definitions
+├── agents/               base_agent, chat, planner, executor
+├── tools/                web_search, calculator, db_tool, rag_tool
+├── llm/                  client, prompts, output_parser
+├── memory/               short_term, long_term, episodic
+├── workflows/            agent_loop (ReAct), planner_executor, multi_agent
+├── retrieval/            RAG subsystem used by agents
+├── evaluation/           agent_eval, benchmark datasets
+├── guardrails/           validators and content filters
 {% endif %}
+├── api/                  routes, schemas, controllers
+├── cache/                Redis semantic cache
+├── monitoring/           tracing (OpenTelemetry) and Prometheus metrics
+└── utils/                logger, helpers
 ```
 
 ## Key Conventions
 
-- All settings come from `src/config.py` → `settings` singleton. Never hardcode API keys.
-- Models use Pydantic v2. Prefer `model_validate` over `parse_obj`.
-- Async-first: all I/O-bound functions should be `async def`.
-- Tests live in `tests/` and use pytest. Run with `uv run pytest`.
+- Config lives in `src/configs/config.py` — use `Settings` (pydantic-settings). Never hardcode keys.
+- All I/O-bound functions must be `async def`.
+- Use `src/utils/logger.py` for logging — no bare `print()` in production paths.
+- Tests live in `tests/` — run with `uv run pytest`.
+- `scripts/` contains one-off CLI scripts, not importable modules.
 
 ## Running Locally
 
 ```bash
-cp .env.example .env   # fill in API keys
+cp .env.example .env
 uv sync
-uv run uvicorn src.main:app --reload
+uvicorn src.main:app --reload
 ```

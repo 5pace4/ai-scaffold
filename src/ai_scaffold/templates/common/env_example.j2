@@ -1,0 +1,36 @@
+# {{ project_name }} — environment variables
+# Copy this file to .env and fill in your values. Never commit .env to git.
+
+# ── LLM ───────────────────────────────────────────────────────────────────────
+{% if llm_provider == "openai" %}
+OPENAI_API_KEY=sk-...
+{% elif llm_provider == "anthropic" %}
+ANTHROPIC_API_KEY=sk-ant-...
+{% elif llm_provider == "groq" %}
+GROQ_API_KEY=gsk_...
+{% elif llm_provider == "azure-openai" %}
+AZURE_OPENAI_API_KEY=
+AZURE_OPENAI_ENDPOINT=https://YOUR_RESOURCE.openai.azure.com/
+AZURE_OPENAI_DEPLOYMENT={{ llm_model }}
+{% elif llm_provider == "ollama" %}
+OLLAMA_BASE_URL=http://localhost:11434
+{% endif %}
+
+# ── Vector DB ─────────────────────────────────────────────────────────────────
+{% if vector_db == "chroma" %}
+CHROMA_HOST=localhost
+CHROMA_PORT=8001
+{% elif vector_db == "qdrant" %}
+QDRANT_URL=http://localhost:6333
+{% elif vector_db == "pinecone" %}
+PINECONE_API_KEY=
+PINECONE_ENVIRONMENT=us-east-1-aws
+{% elif vector_db == "weaviate" %}
+WEAVIATE_URL=http://localhost:8080
+{% elif vector_db == "pgvector" %}
+DATABASE_URL=postgresql://user:password@localhost:5432/{{ package_name }}
+{% endif %}
+
+# ── App ───────────────────────────────────────────────────────────────────────
+DEBUG=false
+LOG_LEVEL=INFO

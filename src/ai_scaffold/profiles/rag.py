@@ -3,27 +3,15 @@ from .minimal import MINIMAL_MANIFEST
 
 RAG_MANIFEST = MINIMAL_MANIFEST + [
     "src.dockerfile",
-    "src.components.hybrid_retriever",
-    "src.components.reranker",
-    "src.services.rag_pipeline",
-    "src.services.semantic_cache",
-    "src.services.conversation",
-    "src.services.query_rewriter",
-    "src.services.query_router",
-    "src.prompts.templates",
-    "src.prompts.registry",
-    "src.security.input_guard",
-    "src.security.content_filter",
-    "src.security.output_filter",
-    "tests.test_retrieval",
-    "tests.test_cache",
-    "tests.test_routing",
+    "docs.architecture",
+    "docs.api_reference",
+    "docs.deployment",
 ]
 
 register_profile(
     Profile(
         name="rag",
-        description="RAG pipeline with hybrid search, semantic cache, security guards, and tests",
+        description="RAG skeleton: ingestion, embedding, vectorstore, rag, evaluation, api, cache, monitoring",
         manifest=RAG_MANIFEST,
     )
 )

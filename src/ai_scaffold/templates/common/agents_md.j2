@@ -2,29 +2,36 @@
 
 ## Project Summary
 
-**{{ project_name }}** is a **{{ profile }} profile** AI application.
+**{{ project_name }}** — `{{ profile }}` profile AI application.
 
-- LLM: `{{ llm_provider }}` (`{{ llm_model }}`)
+- LLM: `{{ llm_provider }}` / `{{ llm_model }}`
 - Vector DB: `{{ vector_db }}`
 - Embeddings: `{{ embedding_model }}`
 
-## Repository Layout (key files for agents)
+## Key Files
 
-| File | Purpose |
+| Path | Purpose |
 |---|---|
-| `src/config.py` | All settings — read this first |
-| `src/models.py` | API schemas |
+| `src/configs/config.py` | All settings — read this before touching anything |
+| `src/main.py` | Entry point / API bootstrap |
+| `src/dependencies.py` | FastAPI dependency injection |
 {% if profile in ["rag", "full"] %}
-| `src/services/rag_pipeline.py` | Main RAG orchestration |
-| `src/components/hybrid_retriever.py` | Retrieval logic |
-| `src/services/semantic_cache.py` | Cache layer |
-| `src/security/input_guard.py` | Input validation |
+| `src/ingestion/` | Document loading, chunking, cleaning |
+| `src/embedding/embedder.py` | Embedding model wrapper |
+| `src/vectorstore/retriever.py` | Top-k vector search |
+| `src/rag/pipeline.py` | End-to-end RAG orchestration |
+| `src/evaluation/evaluator.py` | RAG quality evaluation |
 {% endif %}
 {% if profile in ["agent", "full"] %}
-| `src/agents/document_grader.py` | Doc relevance grading |
-| `src/agents/adaptive_router.py` | Query routing |
-| `src/agents/tools/` | Tool implementations |
+| `src/agents/base_agent.py` | Abstract agent class |
+| `src/workflows/agent_loop.py` | ReAct / tool-use loop |
+| `src/tools/` | Pluggable tool definitions |
+| `src/memory/` | Short-term and long-term memory |
+| `src/guardrails/validators.py` | Input / output safety checks |
 {% endif %}
+| `src/api/routes.py` | HTTP route definitions |
+| `src/cache/redis_client.py` | Semantic caching |
+| `src/monitoring/tracing.py` | OpenTelemetry tracing |
 
 ## Running Tests
 

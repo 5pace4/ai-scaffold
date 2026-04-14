@@ -1,6 +1,6 @@
 # {{ project_name }}
 
-> AI application scaffolded with [create-ai-project](https://github.com/tofayel/ai-scaffold)
+> Scaffolded with [create-ai-project](https://github.com/5pace4/ai-scaffold)
 
 **Profile:** `{{ profile }}` | **LLM:** `{{ llm_provider }}` ({{ llm_model }}) | **Vector DB:** `{{ vector_db }}`
 
@@ -11,45 +11,69 @@
 cp .env.example .env
 
 # 2. Install dependencies
+pip install -r requirements.txt
+# or (recommended)
 uv sync
 
-# 3. Start the API
-uv run uvicorn src.main:app --reload
+# 3. Run the application
+uvicorn src.main:app --reload
 ```
 
-API docs available at http://localhost:8000/docs
+API docs: http://localhost:8000/docs
 
 ## Project Structure
 
 ```
 {{ project_name }}/
 ├── src/
-│   ├── main.py          # FastAPI entry point
-│   ├── config.py        # Settings (pydantic-settings + .env)
-│   ├── models.py        # Request / response schemas
+│   ├── main.py               # Entry point (API / CLI)
+│   ├── configs/
+│   │   └── config.py         # Environment config & constants
+│   ├── dependencies.py       # Dependency injection
 {% if profile in ["rag", "full"] %}
-│   ├── components/      # Retrieval: hybrid search + reranking
-│   ├── services/        # Core logic: RAG pipeline, cache, routing
-│   ├── prompts/         # Versioned prompt templates
-│   └── security/        # Input / content / output guards
+│   ├── ingestion/            # Document loading, chunking, cleaning
+│   ├── embedding/            # Embedding model wrapper
+│   ├── vectorstore/          # Vector DB client, indexer, retriever
+│   ├── rag/                  # RAG pipeline, prompts, generator
+│   ├── evaluation/           # Metrics and evaluator
 {% endif %}
 {% if profile in ["agent", "full"] %}
-│   ├── agents/          # Self-correcting agentic layer
-│   └── agents/tools/    # Pluggable tool definitions
+│   ├── agents/               # Agent definitions (base, chat, planner, executor)
+│   ├── tools/                # Pluggable tools (web search, calculator, RAG, DB)
+│   ├── llm/                  # LLM client, prompts, output parser
+│   ├── memory/               # Short-term, long-term, episodic memory
+│   ├── workflows/            # Orchestration (ReAct loop, planner-executor, multi-agent)
+│   ├── retrieval/            # RAG subsystem for agents
+│   ├── evaluation/           # Agent eval & benchmark datasets
+│   ├── guardrails/           # Safety validators and content filters
+{% endif %}
+│   ├── api/                  # REST API routes, schemas, controllers
+│   ├── cache/                # Redis semantic cache
+│   ├── monitoring/           # Tracing and metrics
+│   └── utils/                # Logger and helpers
+├── data/
+│   ├── raw/                  # Source documents
+│   ├── processed/            # Chunked / cleaned data
+{% if profile in ["rag", "full"] %}
+│   └── embeddings/           # Persisted embedding cache
+{% endif %}
+├── notebooks/                # Experiments and prototyping
+├── scripts/                  # One-off utility scripts
+├── tests/                    # Unit and integration tests
+{% if profile in ["agent", "full"] %}
+├── docker/                   # Docker support files
 {% endif %}
 {% if profile == "full" %}
-├── evaluation/          # Golden dataset + offline/online eval
-├── observability/       # Tracing, feedback, cost tracking
-├── scripts/             # Seed, migrate, healthcheck
-├── frontend/            # UI (containerized separately)
+├── frontend/                 # UI (add your frontend here)
 {% endif %}
-├── tests/               # pytest test suite
-└── docs/                # Architecture, API reference, deployment
+├── .env.example
+├── requirements.txt
+└── pyproject.toml
 ```
 
 ## Environment Variables
 
-Copy `.env.example` → `.env` and configure:
+Copy `.env.example` → `.env` and set:
 
 ```bash
 {% if llm_provider == "openai" %}
@@ -61,6 +85,8 @@ GROQ_API_KEY=gsk_...
 {% elif llm_provider == "azure-openai" %}
 AZURE_OPENAI_API_KEY=...
 AZURE_OPENAI_ENDPOINT=https://...openai.azure.com/
+{% elif llm_provider == "ollama" %}
+OLLAMA_BASE_URL=http://localhost:11434
 {% endif %}
 {% if vector_db == "pinecone" %}
 PINECONE_API_KEY=...
@@ -72,9 +98,9 @@ DATABASE_URL=postgresql://user:pass@localhost:5432/{{ package_name }}
 ## Development
 
 ```bash
-uv run pytest                    # run tests
-uv run ruff check src/ tests/    # lint
-uv run mypy src/                 # type check
+uv run pytest                        # run tests
+uv run ruff check src/ tests/        # lint
+uv run mypy src/                     # type check
 ```
 
 ## License

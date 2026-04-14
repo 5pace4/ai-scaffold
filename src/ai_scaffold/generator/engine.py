@@ -59,6 +59,16 @@ MANIFEST_MAP: dict[str, ManifestEntry] = {
         template_file="common/claude/rules/testing.j2",
         output_path=".claude/rules/testing.md",
     ),
+    "common.env_example": ManifestEntry(
+        template_key="common.env_example",
+        template_file="common/env_example.j2",
+        output_path=".env.example",
+    ),
+    "common.requirements": ManifestEntry(
+        template_key="common.requirements",
+        template_file="common/requirements.j2",
+        output_path="requirements.txt",
+    ),
     # ── src core ──────────────────────────────────────────────────────────────
     "src.main": ManifestEntry(
         template_key="src.main",

@@ -5,15 +5,16 @@ MINIMAL_MANIFEST = [
     "common.pyproject_toml",
     "common.readme",
     "common.claude_md",
-    "src.main",
-    "src.config",
-    "src.models",
+    "common.env_example",
+    "common.requirements",
+    "common.claude_rules_code_style",
+    "common.claude_rules_testing",
 ]
 
 register_profile(
     Profile(
         name="minimal",
-        description="Bare FastAPI app with config, models, and env setup",
+        description="Bare project skeleton: config files, README, and src/ layout",
         manifest=MINIMAL_MANIFEST,
     )
 )
