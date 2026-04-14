@@ -25,9 +25,9 @@ dependencies = [
 create-ai-project = "ai_scaffold.cli:app"
 
 [project.urls]
-Homepage = "https://github.com/tofayel/ai-scaffold"
-Repository = "https://github.com/tofayel/ai-scaffold"
-Issues = "https://github.com/tofayel/ai-scaffold/issues"
+Homepage = "https://github.com/5pace4/ai-scaffold"
+Repository = "https://github.com/5pace4/ai-scaffold"
+Issues = "https://github.com/5pace4/ai-scaffold/issues"
 
 [build-system]
 requires = ["hatchling"]

@@ -3,7 +3,7 @@
 ## Dev setup
 
 ```bash
-git clone https://github.com/tofayel/ai-scaffold
+git clone https://github.com/5pace4/ai-scaffold
 cd ai-scaffold
 uv sync
 ```
