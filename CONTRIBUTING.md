@@ -46,9 +46,3 @@ uv run mypy src/
 2. Add deps to `LLM_DEPS` / `VECTOR_DB_DEPS`
 3. Add a `{% if llm_provider == "..." %}` branch to the affected templates
 4. Add a wizard choice in `prompts/interactive.py`
-
-## Releasing
-
-1. Bump `version` in `pyproject.toml` and `src/ai_scaffold/__init__.py`
-2. Update `CHANGELOG.md`
-3. Create a GitHub release — the publish workflow handles PyPI automatically

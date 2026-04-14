@@ -137,3 +137,6 @@ create-ai-project --version         Show version
 ## License
 
 MIT — [5pace4/ai-scaffold](https://github.com/5pace4/ai-scaffold)
+
+## Contributing
+Pull requests are welcome! For major changes, open an issue first to discuss what you'd like to change.
