@@ -1,5 +1,5 @@
 [project]
-name = "ai-scaffold"
+name = "create-ai-project"
 version = "0.1.0"
 description = "Scaffold production-ready AI projects with clean architecture"
 readme = "README.md"
