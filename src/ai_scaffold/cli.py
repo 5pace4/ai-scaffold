@@ -8,20 +8,23 @@ app = typer.Typer(
     name="create-ai-project",
     help="Scaffold production-ready AI projects with clean architecture.",
     rich_markup_mode="rich",
-    no_args_is_help=True,
 )
 
 console = Console(legacy_windows=False)
 
 
-@app.callback()
+@app.callback(invoke_without_command=True)
 def main(
+    ctx: typer.Context,
     version: bool = typer.Option(
         False, "--version", "-v", is_eager=True, help="Show version and exit."
     ),
 ) -> None:
     if version:
-        console.print(f"create-ai-project [bold cyan]v{__version__}[/bold cyan]")
+        console.print(f"[bold cyan]v{__version__}[/bold cyan]")
+        raise typer.Exit()
+    if ctx.invoked_subcommand is None:
+        console.print(ctx.get_help())
         raise typer.Exit()
 
 
