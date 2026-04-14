@@ -1,0 +1,31 @@
+"""Output filter: screen LLM responses before returning to the user."""
+from __future__ import annotations
+
+import re
+
+from fastapi import HTTPException
+
+
+_PII_PATTERNS = [
+    r"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b",   # email
+    r"\b\d{3}[-.\s]?\d{2}[-.\s]?\d{4}\b",             # SSN-like
+    r"\b(?:\+1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b",  # phone
+]
+
+_PII_COMPILED = [re.compile(p, re.IGNORECASE) for p in _PII_PATTERNS]
+
+
+class OutputFilter:
+    """Third layer: sanitizes LLM output before returning to user."""
+
+    def filter(self, response: str) -> str:
+        """Remove PII and apply output policy. Returns sanitized response."""
+        for pattern in _PII_COMPILED:
+            response = pattern.sub("[REDACTED]", response)
+        return response
+
+    def validate(self, response: str) -> str:
+        """Raise if response violates hard output policy."""
+        if not response or not response.strip():
+            raise HTTPException(status_code=500, detail="Empty response from model.")
+        return self.filter(response)

@@ -1,0 +1,57 @@
+"""Healthcheck script: verify all external services are reachable."""
+from __future__ import annotations
+
+import asyncio
+import sys
+from pathlib import Path
+
+import httpx
+
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from app.config import settings
+
+
+async def check_api() -> bool:
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.get("http://localhost:8000/health", timeout=5)
+            return resp.status_code == 200
+    except Exception:
+        return False
+
+
+{% if vector_db == "chroma" %}
+async def check_vector_db() -> bool:
+    try:
+        import chromadb
+        client = chromadb.HttpClient(host=settings.chroma_host, port=settings.chroma_port)
+        client.heartbeat()
+        return True
+    except Exception:
+        return False
+{% elif vector_db == "qdrant" %}
+async def check_vector_db() -> bool:
+    try:
+        from qdrant_client import QdrantClient
+        client = QdrantClient(url=settings.qdrant_url)
+        client.get_collections()
+        return True
+    except Exception:
+        return False
+{% else %}
+async def check_vector_db() -> bool:
+    return True
+{% endif %}
+
+
+async def main() -> None:
+    checks = {"api": await check_api(), "vector_db": await check_vector_db()}
+    all_ok = all(checks.values())
+    for name, ok in checks.items():
+        print(f"  {'✓' if ok else '✗'} {name}")
+    sys.exit(0 if all_ok else 1)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

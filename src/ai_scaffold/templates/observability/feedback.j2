@@ -1,0 +1,51 @@
+"""User feedback capture — thumbs up/down + optional free-text comment."""
+from __future__ import annotations
+
+import json
+import time
+from dataclasses import asdict, dataclass
+from pathlib import Path
+
+FEEDBACK_LOG = Path("observability/feedback.jsonl")
+
+
+@dataclass
+class FeedbackEntry:
+    query: str
+    answer: str
+    rating: int          # 1 = thumbs up, -1 = thumbs down
+    comment: str = ""
+    session_id: str = ""
+    timestamp: float = 0.0
+
+    def __post_init__(self) -> None:
+        if not self.timestamp:
+            self.timestamp = time.time()
+
+
+class FeedbackStore:
+    def __init__(self) -> None:
+        FEEDBACK_LOG.parent.mkdir(parents=True, exist_ok=True)
+
+    def record(self, entry: FeedbackEntry) -> None:
+        with open(FEEDBACK_LOG, "a") as f:
+            f.write(json.dumps(asdict(entry)) + "\n")
+
+    def load_all(self) -> list[FeedbackEntry]:
+        if not FEEDBACK_LOG.exists():
+            return []
+        entries = []
+        for line in FEEDBACK_LOG.read_text().splitlines():
+            if line.strip():
+                entries.append(FeedbackEntry(**json.loads(line)))
+        return entries
+
+    def approval_rate(self) -> float:
+        entries = self.load_all()
+        if not entries:
+            return 0.0
+        positives = sum(1 for e in entries if e.rating > 0)
+        return positives / len(entries)
+
+
+feedback_store = FeedbackStore()

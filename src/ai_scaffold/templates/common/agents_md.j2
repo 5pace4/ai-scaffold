@@ -1,0 +1,40 @@
+# {{ project_name }} — Agents Context
+
+## Project Summary
+
+**{{ project_name }}** is a **{{ profile }} profile** AI application.
+
+- LLM: `{{ llm_provider }}` (`{{ llm_model }}`)
+- Vector DB: `{{ vector_db }}`
+- Embeddings: `{{ embedding_model }}`
+
+## Repository Layout (key files for agents)
+
+| File | Purpose |
+|---|---|
+| `app/config.py` | All settings — read this first |
+| `app/models.py` | API schemas |
+{% if profile in ["rag", "full"] %}
+| `app/services/rag_pipeline.py` | Main RAG orchestration |
+| `app/components/hybrid_retriever.py` | Retrieval logic |
+| `app/services/semantic_cache.py` | Cache layer |
+| `app/security/input_guard.py` | Input validation |
+{% endif %}
+{% if profile in ["agent", "full"] %}
+| `app/agents/document_grader.py` | Doc relevance grading |
+| `app/agents/adaptive_router.py` | Query routing |
+| `app/agents/tools/` | Tool implementations |
+{% endif %}
+
+## Running Tests
+
+```bash
+uv run pytest tests/ -v
+```
+
+## Linting & Type Checking
+
+```bash
+uv run ruff check app/ tests/
+uv run mypy app/
+```

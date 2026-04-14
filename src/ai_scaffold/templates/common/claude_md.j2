@@ -1,0 +1,53 @@
+# {{ project_name }} — Claude Context
+
+## Project Overview
+
+This is a **{{ profile }} profile** AI application using:
+- **LLM:** {{ llm_provider }} / {{ llm_model }}
+- **Vector DB:** {{ vector_db }}
+- **Embeddings:** {{ embedding_model }}
+- **Framework:** FastAPI + pydantic-settings
+
+## Architecture
+
+```
+app/
+├── main.py          Entry point — FastAPI app, routers, lifespan
+├── config.py        All settings via pydantic-settings (reads .env)
+├── models.py        Request/response Pydantic schemas
+{% if profile in ["rag", "full"] %}
+├── components/      Low-level retrieval primitives
+│   ├── hybrid_retriever.py   Combines dense + sparse search
+│   └── reranker.py           Cross-encoder reranking
+├── services/        Orchestration layer
+│   ├── rag_pipeline.py       End-to-end query → answer
+│   ├── semantic_cache.py     Embedding-based result cache
+│   ├── conversation.py       Multi-turn memory management
+│   ├── query_rewriter.py     LLM-powered query expansion
+│   └── query_router.py       Route queries to right pipeline
+├── prompts/         Versioned prompt management
+└── security/        Three-layer guard: input → content → output
+{% endif %}
+{% if profile in ["agent", "full"] %}
+├── agents/          Agentic layer with self-correction
+│   ├── document_grader.py    Grade retrieved docs for relevance
+│   ├── query_decomposer.py   Break complex queries into sub-queries
+│   ├── adaptive_router.py    LLM-driven pipeline selection
+│   └── tools/               Pluggable tool definitions
+{% endif %}
+```
+
+## Key Conventions
+
+- All settings come from `app/config.py` → `settings` singleton. Never hardcode API keys.
+- Models use Pydantic v2. Prefer `model_validate` over `parse_obj`.
+- Async-first: all I/O-bound functions should be `async def`.
+- Tests live in `tests/` and use pytest. Run with `uv run pytest`.
+
+## Running Locally
+
+```bash
+cp .env.example .env   # fill in API keys
+uv sync
+uv run uvicorn app.main:app --reload
+```

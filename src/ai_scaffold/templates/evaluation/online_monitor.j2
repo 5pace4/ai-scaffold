@@ -1,0 +1,59 @@
+"""Online monitoring — tracks live query quality using lightweight heuristics."""
+from __future__ import annotations
+
+import json
+import time
+from dataclasses import asdict, dataclass, field
+from pathlib import Path
+
+LOG_FILE = Path("evaluation/eval_results/online_monitor.jsonl")
+
+
+@dataclass
+class QueryTrace:
+    query: str
+    answer: str
+    latency_ms: float
+    sources_count: int
+    cached: bool
+    timestamp: float = field(default_factory=time.time)
+    flags: list[str] = field(default_factory=list)
+
+
+class OnlineMonitor:
+    """Logs every query + answer for asynchronous quality review."""
+
+    def __init__(self) -> None:
+        LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
+
+    def log(self, trace: QueryTrace) -> None:
+        with open(LOG_FILE, "a") as f:
+            f.write(json.dumps(asdict(trace)) + "\n")
+
+    def flag_empty_answer(self, trace: QueryTrace) -> QueryTrace:
+        if not trace.answer.strip():
+            trace.flags.append("empty_answer")
+        return trace
+
+    def flag_low_sources(self, trace: QueryTrace, min_sources: int = 1) -> QueryTrace:
+        if trace.sources_count < min_sources:
+            trace.flags.append("low_sources")
+        return trace
+
+    def flag_slow(self, trace: QueryTrace, threshold_ms: float = 5000) -> QueryTrace:
+        if trace.latency_ms > threshold_ms:
+            trace.flags.append("slow_response")
+        return trace
+
+    def record(self, query: str, answer: str, latency_ms: float, sources_count: int, cached: bool) -> None:
+        trace = QueryTrace(
+            query=query,
+            answer=answer,
+            latency_ms=latency_ms,
+            sources_count=sources_count,
+            cached=cached,
+        )
+        self.flag_empty_answer(trace)
+        self.flag_low_sources(trace)
+        self.flag_slow(trace)
+        self.log(trace)

@@ -1,0 +1,26 @@
+"""Vector search tool — retrieves semantically similar documents from the vector store."""
+from __future__ import annotations
+
+from langchain_core.tools import tool
+
+
+@tool
+async def vector_search(query: str, top_k: int = 5) -> str:
+    """Retrieve semantically similar documents from the vector store.
+
+    Args:
+        query: The search query.
+        top_k: Number of results to return.
+
+    Returns:
+        Concatenated document snippets ranked by similarity.
+    """
+    from app.config import settings
+    from app.components.hybrid_retriever import HybridRetriever
+
+    retriever = HybridRetriever(settings, top_k=top_k)
+    result = await retriever.retrieve(query, top_k=top_k)
+    snippets = [
+        f"[{i+1}] {doc.page_content[:300]}" for i, doc in enumerate(result.documents)
+    ]
+    return "\n\n".join(snippets) if snippets else "No results found."

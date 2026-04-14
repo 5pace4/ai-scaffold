@@ -1,0 +1,84 @@
+# {{ project_name }} — Architecture
+
+## Overview
+
+**Profile:** `{{ profile }}` | **LLM:** `{{ llm_provider }}` | **Vector DB:** `{{ vector_db }}`
+
+This application follows a layered clean architecture:
+
+```
+Request → Security (input guard)
+        → Services (routing, rewriting, caching)
+        → Components (retrieval, reranking)
+        → LLM ({{ llm_provider }}/{{ llm_model }})
+        → Security (output filter)
+        → Response
+```
+
+## Layers
+
+### API Layer (`app/main.py`)
+FastAPI application exposing `/query` and `/health` endpoints. All I/O is async.
+
+### Security Layer
+Three-stage guard pipeline:
+1. **InputGuard** (`app/security/input_guard.py`) — validates query length, blocks prompt injection
+2. **ContentFilter** (`app/security/content_filter.py`) — filters retrieved documents for policy compliance
+3. **OutputFilter** (`app/security/output_filter.py`) — redacts PII from LLM responses
+
+{% if profile in ["rag", "full"] %}
+### Retrieval Layer (`app/components/`)
+- **HybridRetriever** — combines dense vector search ({{ vector_db }}) with keyword matching
+- **Reranker** — LLM-based cross-encoder reranking for precision
+
+### Services Layer (`app/services/`)
+- **RAGPipeline** — orchestrates the full query → answer flow
+- **SemanticCache** — embedding-based cache to avoid redundant LLM calls
+- **ConversationMemory** — per-session multi-turn history
+- **QueryRewriter** — LLM-powered query expansion
+- **QueryRouter** — classifies queries into rag / agent / direct
+{% endif %}
+
+{% if profile in ["agent", "full"] %}
+### Agent Layer (`app/agents/`)
+- **DocumentGrader** — grades retrieved docs for relevance (self-correcting loop)
+- **QueryDecomposer** — breaks complex queries into sub-queries
+- **AdaptiveRouter** — routes to the right pipeline with fallback
+- **Tools** — pluggable tool definitions (web search, code search, vector search)
+{% endif %}
+
+## Data Flow
+
+```
+User Query
+    │
+    ▼
+InputGuard.validate()
+    │
+    ▼
+SemanticCache.get()  ──── HIT ──→  Return cached answer
+    │ MISS
+    ▼
+QueryRewriter.rewrite()
+    │
+    ▼
+HybridRetriever.retrieve()
+    │
+    ▼
+ContentFilter.filter()
+    │
+    ▼
+Reranker.rerank()
+    │
+    ▼
+LLM.generate(context + query)
+    │
+    ▼
+OutputFilter.validate()
+    │
+    ▼
+SemanticCache.set()
+    │
+    ▼
+Response
+```

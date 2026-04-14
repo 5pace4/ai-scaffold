@@ -1,0 +1,46 @@
+"""Input guard: validate and sanitize user input before processing."""
+from __future__ import annotations
+
+import re
+
+from fastapi import HTTPException
+
+
+# Patterns that indicate prompt injection or jailbreak attempts
+_INJECTION_PATTERNS = [
+    r"ignore\s+(all\s+)?previous\s+instructions",
+    r"you\s+are\s+now\s+",
+    r"act\s+as\s+(if\s+you\s+are\s+)?",
+    r"disregard\s+(all\s+)?",
+    r"jailbreak",
+    r"<\s*script",
+    r"system\s*prompt",
+]
+
+_COMPILED = [re.compile(p, re.IGNORECASE) for p in _INJECTION_PATTERNS]
+
+MAX_QUERY_LENGTH = 2000
+
+
+class InputGuard:
+    """First layer: validates raw user input."""
+
+    def validate(self, query: str) -> str:
+        """Raise HTTPException if query is invalid; return sanitized query."""
+        if not query or not query.strip():
+            raise HTTPException(status_code=422, detail="Query cannot be empty.")
+
+        if len(query) > MAX_QUERY_LENGTH:
+            raise HTTPException(
+                status_code=422,
+                detail=f"Query exceeds maximum length of {MAX_QUERY_LENGTH} characters.",
+            )
+
+        for pattern in _COMPILED:
+            if pattern.search(query):
+                raise HTTPException(
+                    status_code=422,
+                    detail="Query contains disallowed content.",
+                )
+
+        return query.strip()

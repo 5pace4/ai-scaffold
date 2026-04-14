@@ -1,0 +1,58 @@
+"""Grades retrieved documents for relevance — part of the self-correcting RAG loop."""
+from __future__ import annotations
+
+from langchain_core.documents import Document
+from langchain_core.prompts import ChatPromptTemplate
+
+from app.config import Settings
+
+_GRADE_PROMPT = ChatPromptTemplate.from_messages([
+    ("system", (
+        "You are a document relevance grader. "
+        "Given a question and a document, output 'relevant' or 'not_relevant'. "
+        "Return ONLY one of those two words."
+    )),
+    ("human", "Question: {question}\n\nDocument:\n{document}"),
+])
+
+
+class DocumentGrader:
+    def __init__(self, settings: Settings) -> None:
+        self.settings = settings
+        self._llm = self._build_llm()
+
+    def _build_llm(self):
+{% if llm_provider == "openai" %}
+        from langchain_openai import ChatOpenAI
+        return ChatOpenAI(model=self.settings.llm_model, api_key=self.settings.openai_api_key, temperature=0)
+{% elif llm_provider == "anthropic" %}
+        from langchain_anthropic import ChatAnthropic
+        return ChatAnthropic(model=self.settings.llm_model, api_key=self.settings.anthropic_api_key, temperature=0)
+{% elif llm_provider == "groq" %}
+        from langchain_groq import ChatGroq
+        return ChatGroq(model=self.settings.llm_model, api_key=self.settings.groq_api_key, temperature=0)
+{% elif llm_provider == "ollama" %}
+        from langchain_ollama import ChatOllama
+        return ChatOllama(model=self.settings.llm_model, base_url=self.settings.ollama_base_url, temperature=0)
+{% elif llm_provider == "azure-openai" %}
+        from langchain_openai import AzureChatOpenAI
+        return AzureChatOpenAI(
+            azure_deployment=self.settings.azure_openai_deployment,
+            api_key=self.settings.azure_openai_api_key,
+            azure_endpoint=self.settings.azure_openai_endpoint,
+            temperature=0,
+        )
+{% endif %}
+
+    async def grade(self, question: str, documents: list[Document]) -> list[Document]:
+        """Return only documents graded as relevant."""
+        relevant = []
+        chain = _GRADE_PROMPT | self._llm
+        for doc in documents:
+            result = await chain.ainvoke({
+                "question": question,
+                "document": doc.page_content[:800],
+            })
+            if "relevant" in result.content.lower() and "not_relevant" not in result.content.lower():
+                relevant.append(doc)
+        return relevant

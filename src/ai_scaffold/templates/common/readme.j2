@@ -1,0 +1,82 @@
+# {{ project_name }}
+
+> AI application scaffolded with [create-ai-project](https://github.com/tofayel/ai-scaffold)
+
+**Profile:** `{{ profile }}` | **LLM:** `{{ llm_provider }}` ({{ llm_model }}) | **Vector DB:** `{{ vector_db }}`
+
+## Quick Start
+
+```bash
+# 1. Copy and fill in environment variables
+cp .env.example .env
+
+# 2. Install dependencies
+uv sync
+
+# 3. Start the API
+uv run uvicorn app.main:app --reload
+```
+
+API docs available at http://localhost:8000/docs
+
+## Project Structure
+
+```
+{{ project_name }}/
+├── app/
+│   ├── main.py          # FastAPI entry point
+│   ├── config.py        # Settings (pydantic-settings + .env)
+│   ├── models.py        # Request / response schemas
+{% if profile in ["rag", "full"] %}
+│   ├── components/      # Retrieval: hybrid search + reranking
+│   ├── services/        # Core logic: RAG pipeline, cache, routing
+│   ├── prompts/         # Versioned prompt templates
+│   └── security/        # Input / content / output guards
+{% endif %}
+{% if profile in ["agent", "full"] %}
+│   ├── agents/          # Self-correcting agentic layer
+│   └── agents/tools/    # Pluggable tool definitions
+{% endif %}
+{% if profile == "full" %}
+├── evaluation/          # Golden dataset + offline/online eval
+├── observability/       # Tracing, feedback, cost tracking
+├── scripts/             # Seed, migrate, healthcheck
+├── frontend/            # UI (containerized separately)
+{% endif %}
+├── tests/               # pytest test suite
+└── docs/                # Architecture, API reference, deployment
+```
+
+## Environment Variables
+
+Copy `.env.example` → `.env` and configure:
+
+```bash
+{% if llm_provider == "openai" %}
+OPENAI_API_KEY=sk-...
+{% elif llm_provider == "anthropic" %}
+ANTHROPIC_API_KEY=sk-ant-...
+{% elif llm_provider == "groq" %}
+GROQ_API_KEY=gsk_...
+{% elif llm_provider == "azure-openai" %}
+AZURE_OPENAI_API_KEY=...
+AZURE_OPENAI_ENDPOINT=https://...openai.azure.com/
+{% endif %}
+{% if vector_db == "pinecone" %}
+PINECONE_API_KEY=...
+{% elif vector_db == "pgvector" %}
+DATABASE_URL=postgresql://user:pass@localhost:5432/{{ package_name }}
+{% endif %}
+```
+
+## Development
+
+```bash
+uv run pytest                    # run tests
+uv run ruff check app/ tests/    # lint
+uv run mypy app/                 # type check
+```
+
+## License
+
+MIT

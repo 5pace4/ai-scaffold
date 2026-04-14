@@ -1,0 +1,32 @@
+"""Hot-swappable prompt registry — swap prompts without redeploying."""
+from __future__ import annotations
+
+from app.prompts.templates import (
+    DOCUMENT_GRADE_V1,
+    QUERY_REWRITE_V1,
+    RAG_ANSWER_V1,
+    ROUTE_CLASSIFY_V1,
+    PromptTemplate,
+)
+
+_REGISTRY: dict[str, PromptTemplate] = {
+    "rag_answer": RAG_ANSWER_V1,
+    "query_rewrite": QUERY_REWRITE_V1,
+    "document_grade": DOCUMENT_GRADE_V1,
+    "route_classify": ROUTE_CLASSIFY_V1,
+}
+
+
+def get_prompt(name: str) -> PromptTemplate:
+    if name not in _REGISTRY:
+        raise KeyError(f"Prompt '{name}' not found. Available: {list(_REGISTRY)}")
+    return _REGISTRY[name]
+
+
+def register_prompt(prompt: PromptTemplate) -> None:
+    """Register a custom or versioned prompt at runtime."""
+    _REGISTRY[prompt.name] = prompt
+
+
+def list_prompts() -> list[str]:
+    return list(_REGISTRY)

@@ -1,0 +1,77 @@
+"""Cross-encoder reranker for improving retrieval precision."""
+from __future__ import annotations
+
+from langchain_core.documents import Document
+
+from app.config import Settings
+
+
+class Reranker:
+    """Reranks retrieved documents using the LLM as a cross-encoder judge."""
+
+    def __init__(self, settings: Settings) -> None:
+        self.settings = settings
+        self._llm = self._build_llm()
+
+    def _build_llm(self):
+{% if llm_provider == "openai" %}
+        from langchain_openai import ChatOpenAI
+        return ChatOpenAI(
+            model=self.settings.llm_model,
+            api_key=self.settings.openai_api_key,
+            temperature=0,
+        )
+{% elif llm_provider == "anthropic" %}
+        from langchain_anthropic import ChatAnthropic
+        return ChatAnthropic(
+            model=self.settings.llm_model,
+            api_key=self.settings.anthropic_api_key,
+            temperature=0,
+        )
+{% elif llm_provider == "groq" %}
+        from langchain_groq import ChatGroq
+        return ChatGroq(
+            model=self.settings.llm_model,
+            api_key=self.settings.groq_api_key,
+            temperature=0,
+        )
+{% elif llm_provider == "ollama" %}
+        from langchain_ollama import ChatOllama
+        return ChatOllama(
+            model=self.settings.llm_model,
+            base_url=self.settings.ollama_base_url,
+            temperature=0,
+        )
+{% elif llm_provider == "azure-openai" %}
+        from langchain_openai import AzureChatOpenAI
+        return AzureChatOpenAI(
+            azure_deployment=self.settings.azure_openai_deployment,
+            api_key=self.settings.azure_openai_api_key,
+            azure_endpoint=self.settings.azure_openai_endpoint,
+            temperature=0,
+        )
+{% endif %}
+
+    async def rerank(self, query: str, documents: list[Document], top_k: int = 3) -> list[Document]:
+        """Score each document for relevance to the query and return top_k."""
+        if not documents:
+            return []
+
+        PROMPT = (
+            "Rate the relevance of the following document to the query on a scale of 1-10.\n"
+            "Query: {query}\nDocument: {content}\nReturn ONLY the integer score."
+        )
+
+        scored: list[tuple[Document, int]] = []
+        for doc in documents:
+            msg = await self._llm.ainvoke(
+                PROMPT.format(query=query, content=doc.page_content[:500])
+            )
+            try:
+                score = int(msg.content.strip())
+            except ValueError:
+                score = 5
+            scored.append((doc, score))
+
+        scored.sort(key=lambda x: x[1], reverse=True)
+        return [doc for doc, _ in scored[:top_k]]

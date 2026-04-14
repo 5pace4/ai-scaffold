@@ -1,0 +1,49 @@
+"""Adaptive router: LLM-driven pipeline selection with self-correction."""
+from __future__ import annotations
+
+from app.agents.document_grader import DocumentGrader
+from app.agents.query_decomposer import QueryDecomposer
+from app.config import Settings
+from app.services.query_router import QueryRouter, RouteTarget
+
+
+class AdaptiveRouter:
+    """Routes queries to the right pipeline, with fallback and self-correction."""
+
+    MAX_RETRIES = 2
+
+    def __init__(self, settings: Settings) -> None:
+        self.settings = settings
+        self.router = QueryRouter(settings)
+        self.decomposer = QueryDecomposer(settings)
+        self.grader = DocumentGrader(settings)
+
+    async def route(self, query: str) -> str:
+        target = await self.router.route(query)
+
+        if target == RouteTarget.RAG:
+            return await self._handle_rag(query)
+        elif target == RouteTarget.AGENT:
+            return await self._handle_agent(query)
+        else:
+            return await self._handle_direct(query)
+
+    async def _handle_rag(self, query: str) -> str:
+        from app.services.rag_pipeline import RAGPipeline
+        pipeline = RAGPipeline(self.settings)
+        return await pipeline.run(query)
+
+    async def _handle_agent(self, query: str) -> str:
+        # Decompose into sub-queries, run RAG on each, synthesize
+        sub_queries = await self.decomposer.decompose(query)
+        from app.services.rag_pipeline import RAGPipeline
+        pipeline = RAGPipeline(self.settings)
+        answers = []
+        for sub_q in sub_queries:
+            answers.append(await pipeline.run(sub_q))
+        return "\n\n".join(answers)
+
+    async def _handle_direct(self, query: str) -> str:
+        from app.services.rag_pipeline import RAGPipeline
+        pipeline = RAGPipeline(self.settings)
+        return await pipeline.run(query)

@@ -1,0 +1,36 @@
+# Code Style Rules
+
+## Python
+
+- Python {{ python_version }}+, async-first for all I/O
+- Type annotations on every function signature
+- Pydantic v2 models for all data structures
+- Use `from __future__ import annotations` in files with forward refs
+- Max line length: 100 characters (ruff enforces this)
+- Imports: stdlib → third-party → local, sorted within each group
+
+## Naming
+
+- Files: `snake_case.py`
+- Classes: `PascalCase`
+- Functions/variables: `snake_case`
+- Constants: `UPPER_SNAKE_CASE`
+
+## FastAPI
+
+- All route handlers are `async def`
+- Request bodies: Pydantic models
+- Response models declared on every route
+- Use `Depends()` for injecting `settings`, services, and auth
+
+## Config
+
+- Never hardcode secrets or API endpoints
+- All config lives in `app/config.py` → `settings` singleton
+- Use `settings.llm_model`, `settings.vector_db_url`, etc.
+
+## Error Handling
+
+- Raise `HTTPException` for API errors with descriptive `detail` messages
+- Log exceptions with context before re-raising
+- Never swallow exceptions silently

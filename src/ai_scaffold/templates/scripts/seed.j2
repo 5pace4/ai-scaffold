@@ -1,0 +1,29 @@
+"""Seed script: load initial documents into the vector store."""
+from __future__ import annotations
+
+import asyncio
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from langchain_core.documents import Document
+
+from app.components.hybrid_retriever import HybridRetriever
+from app.config import settings
+
+SAMPLE_DOCS = [
+    Document(page_content="Welcome to {{ project_name }}. This is a sample document.", metadata={"source": "seed"}),
+    Document(page_content="This system uses {{ llm_provider }} for generation and {{ vector_db }} for retrieval.", metadata={"source": "seed"}),
+]
+
+
+async def seed() -> None:
+    print(f"Seeding {len(SAMPLE_DOCS)} documents into {{ vector_db }}...")
+    retriever = HybridRetriever(settings)
+    await retriever.add_documents(SAMPLE_DOCS)
+    print("Done.")
+
+
+if __name__ == "__main__":
+    asyncio.run(seed())

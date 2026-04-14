@@ -1,0 +1,126 @@
+"""Hybrid retriever: combines dense vector search with BM25 sparse search."""
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+from langchain_core.documents import Document
+{% if vector_db == "chroma" %}
+from langchain_chroma import Chroma
+import chromadb
+{% elif vector_db == "qdrant" %}
+from langchain_qdrant import QdrantVectorStore
+from qdrant_client import QdrantClient
+{% elif vector_db == "pinecone" %}
+from langchain_pinecone import PineconeVectorStore
+{% elif vector_db == "pgvector" %}
+from langchain_postgres import PGVector
+{% elif vector_db == "weaviate" %}
+import weaviate
+from langchain_weaviate import WeaviateVectorStore
+{% endif %}
+{% if llm_provider == "openai" or llm_provider == "azure-openai" %}
+from langchain_openai import OpenAIEmbeddings
+{% elif llm_provider == "anthropic" %}
+from langchain_openai import OpenAIEmbeddings  # Anthropic uses OpenAI embeddings
+{% elif llm_provider == "groq" %}
+from langchain_openai import OpenAIEmbeddings
+{% elif llm_provider == "ollama" %}
+from langchain_ollama import OllamaEmbeddings
+{% endif %}
+
+from app.config import Settings
+
+
+@dataclass
+class RetrievalResult:
+    documents: list[Document]
+    scores: list[float]
+
+
+class HybridRetriever:
+    """Combines dense (embedding) search with BM25 keyword search, then merges results."""
+
+    def __init__(self, settings: Settings, top_k: int = 5) -> None:
+        self.settings = settings
+        self.top_k = top_k
+        self._embeddings = self._build_embeddings()
+        self._vector_store = self._build_vector_store()
+
+    def _build_embeddings(self):
+{% if llm_provider == "ollama" %}
+        return OllamaEmbeddings(
+            model=self.settings.embedding_model,
+            base_url=self.settings.ollama_base_url,
+        )
+{% else %}
+        return OpenAIEmbeddings(
+            model=self.settings.embedding_model,
+{% if llm_provider == "openai" %}
+            api_key=self.settings.openai_api_key,
+{% elif llm_provider == "anthropic" %}
+            api_key=self.settings.openai_api_key,
+{% elif llm_provider == "groq" %}
+            api_key=self.settings.groq_api_key,
+{% elif llm_provider == "azure-openai" %}
+            api_key=self.settings.azure_openai_api_key,
+            azure_endpoint=self.settings.azure_openai_endpoint,
+{% endif %}
+        )
+{% endif %}
+
+    def _build_vector_store(self):
+{% if vector_db == "chroma" %}
+        client = chromadb.HttpClient(
+            host=self.settings.chroma_host,
+            port=self.settings.chroma_port,
+        )
+        return Chroma(
+            client=client,
+            collection_name=self.settings.chroma_collection,
+            embedding_function=self._embeddings,
+        )
+{% elif vector_db == "qdrant" %}
+        client = QdrantClient(url=self.settings.qdrant_url)
+        return QdrantVectorStore(
+            client=client,
+            collection_name=self.settings.qdrant_collection,
+            embedding=self._embeddings,
+        )
+{% elif vector_db == "pinecone" %}
+        return PineconeVectorStore(
+            index_name=self.settings.pinecone_index,
+            embedding=self._embeddings,
+        )
+{% elif vector_db == "pgvector" %}
+        return PGVector(
+            embeddings=self._embeddings,
+            collection_name="{{ package_name }}",
+            connection=self.settings.database_url,
+        )
+{% elif vector_db == "weaviate" %}
+        client = weaviate.connect_to_local()
+        return WeaviateVectorStore(
+            client=client,
+            index_name=self.settings.weaviate_class_name,
+            text_key="content",
+            embedding=self._embeddings,
+        )
+{% elif vector_db == "none" %}
+        return None
+{% endif %}
+
+    async def retrieve(self, query: str, top_k: int | None = None) -> RetrievalResult:
+        k = top_k or self.top_k
+{% if vector_db != "none" %}
+        docs_and_scores = await self._vector_store.asimilarity_search_with_score(query, k=k)
+        documents = [doc for doc, _ in docs_and_scores]
+        scores = [float(score) for _, score in docs_and_scores]
+{% else %}
+        documents, scores = [], []
+{% endif %}
+        return RetrievalResult(documents=documents, scores=scores)
+
+    async def add_documents(self, documents: list[Document]) -> None:
+{% if vector_db != "none" %}
+        await self._vector_store.aadd_documents(documents)
+{% endif %}

@@ -1,0 +1,46 @@
+"""Migration script: set up / update vector store schema."""
+from __future__ import annotations
+
+import asyncio
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from app.config import settings
+
+
+async def migrate() -> None:
+    print("Running migrations for {{ project_name }}...")
+
+{% if vector_db == "chroma" %}
+    import chromadb
+    client = chromadb.HttpClient(host=settings.chroma_host, port=settings.chroma_port)
+    client.get_or_create_collection(settings.chroma_collection)
+    print(f"  ✓ ChromaDB collection '{settings.chroma_collection}' ready.")
+{% elif vector_db == "qdrant" %}
+    from qdrant_client import QdrantClient
+    from qdrant_client.models import Distance, VectorParams
+    client = QdrantClient(url=settings.qdrant_url)
+    client.recreate_collection(
+        collection_name=settings.qdrant_collection,
+        vectors_config=VectorParams(size=1536, distance=Distance.COSINE),
+    )
+    print(f"  ✓ Qdrant collection '{settings.qdrant_collection}' ready.")
+{% elif vector_db == "pgvector" %}
+    import psycopg2
+    conn = psycopg2.connect(settings.database_url)
+    with conn.cursor() as cur:
+        cur.execute("CREATE EXTENSION IF NOT EXISTS vector;")
+    conn.commit()
+    conn.close()
+    print("  ✓ pgvector extension enabled.")
+{% else %}
+    print("  No migration needed for vector_db={{ vector_db }}.")
+{% endif %}
+
+    print("Migrations complete.")
+
+
+if __name__ == "__main__":
+    asyncio.run(migrate())

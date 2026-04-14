@@ -1,0 +1,69 @@
+"""Per-request token and cost tracking with breakdown reports."""
+from __future__ import annotations
+
+import json
+import time
+from dataclasses import asdict, dataclass, field
+from pathlib import Path
+
+COST_LOG = Path("observability/cost.jsonl")
+
+# Approximate cost per 1M tokens (update as pricing changes)
+COST_PER_1M: dict[str, dict[str, float]] = {
+    "openai": {"input": 2.50, "output": 10.00},       # gpt-4o
+    "anthropic": {"input": 3.00, "output": 15.00},    # claude-sonnet
+    "groq": {"input": 0.05, "output": 0.08},
+    "ollama": {"input": 0.0, "output": 0.0},
+    "azure-openai": {"input": 2.50, "output": 10.00},
+}
+
+
+@dataclass
+class CostEntry:
+    provider: str
+    model: str
+    input_tokens: int
+    output_tokens: int
+    cost_usd: float = 0.0
+    request_id: str = ""
+    timestamp: float = field(default_factory=time.time)
+
+    def __post_init__(self) -> None:
+        if self.cost_usd == 0.0:
+            rates = COST_PER_1M.get(self.provider, {"input": 0.0, "output": 0.0})
+            self.cost_usd = (
+                self.input_tokens * rates["input"] / 1_000_000
+                + self.output_tokens * rates["output"] / 1_000_000
+            )
+
+
+class CostTracker:
+    def __init__(self) -> None:
+        COST_LOG.parent.mkdir(parents=True, exist_ok=True)
+
+    def record(self, entry: CostEntry) -> None:
+        with open(COST_LOG, "a") as f:
+            f.write(json.dumps(asdict(entry)) + "\n")
+
+    def total_cost(self) -> float:
+        return sum(e.cost_usd for e in self._load())
+
+    def breakdown(self) -> dict:
+        entries = self._load()
+        by_model: dict[str, float] = {}
+        for e in entries:
+            key = f"{e.provider}/{e.model}"
+            by_model[key] = by_model.get(key, 0.0) + e.cost_usd
+        return {"total_usd": self.total_cost(), "by_model": by_model, "request_count": len(entries)}
+
+    def _load(self) -> list[CostEntry]:
+        if not COST_LOG.exists():
+            return []
+        result = []
+        for line in COST_LOG.read_text().splitlines():
+            if line.strip():
+                result.append(CostEntry(**json.loads(line)))
+        return result
+
+
+cost_tracker = CostTracker()

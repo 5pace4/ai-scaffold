@@ -1,0 +1,78 @@
+# {{ project_name }} — API Reference
+
+Base URL: `http://localhost:8000`
+
+Interactive docs: `http://localhost:8000/docs`
+
+---
+
+## `GET /health`
+
+Returns service health status.
+
+**Response**
+```json
+{"status": "ok", "app": "{{ project_name }}"}
+```
+
+---
+
+{% if profile in ["rag", "full"] %}
+## `POST /query`
+
+Submit a query and receive an AI-generated answer with sources.
+
+**Request Body**
+```json
+{
+  "query": "What is the refund policy?",
+  "session_id": "optional-session-uuid",
+  "top_k": 5
+}
+```
+
+**Response**
+```json
+{
+  "answer": "The refund policy states...",
+  "sources": [
+    {"content": "...", "source": "doc.pdf", "score": 0.92}
+  ],
+  "session_id": "optional-session-uuid"
+}
+```
+
+**Errors**
+| Code | Reason |
+|------|--------|
+| 422  | Empty query, query too long, or prompt injection detected |
+| 500  | LLM or vector DB error |
+
+---
+{% endif %}
+
+{% if profile in ["agent", "full"] %}
+## `POST /agent`
+
+Submit a query to the agentic pipeline (supports tool use and multi-step reasoning).
+
+**Request Body**
+```json
+{
+  "query": "Find recent papers on RAG and summarize key findings",
+  "session_id": "optional-uuid",
+  "tools": ["web_search", "vector_search"]
+}
+```
+
+**Response**
+```json
+{
+  "result": "Here are the key findings...",
+  "tool_calls": [{"tool": "web_search", "input": "..."}],
+  "reasoning": "I searched for recent papers..."
+}
+```
+
+---
+{% endif %}

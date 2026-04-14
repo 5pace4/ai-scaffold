@@ -1,0 +1,70 @@
+"""Offline evaluation pipeline — runs golden dataset against the RAG pipeline."""
+from __future__ import annotations
+
+import asyncio
+import json
+from dataclasses import dataclass, field
+from pathlib import Path
+
+from app.config import settings
+from app.services.rag_pipeline import RAGPipeline
+
+GOLDEN_DATASET = Path(__file__).parent / "golden_dataset.json"
+RESULTS_DIR = Path(__file__).parent / "eval_results"
+
+
+@dataclass
+class EvalResult:
+    case_id: str
+    query: str
+    answer: str
+    passed: bool
+    failures: list[str] = field(default_factory=list)
+
+
+async def run_case(pipeline: RAGPipeline, case: dict) -> EvalResult:
+    answer = await pipeline.run(case["query"])
+    failures = []
+
+    for phrase in case.get("expected_answer_contains", []):
+        if phrase.lower() not in answer.lower():
+            failures.append(f"Missing phrase: '{phrase}'")
+
+    return EvalResult(
+        case_id=case["id"],
+        query=case["query"],
+        answer=answer,
+        passed=len(failures) == 0,
+        failures=failures,
+    )
+
+
+async def run_eval() -> None:
+    dataset = json.loads(GOLDEN_DATASET.read_text())
+    pipeline = RAGPipeline(settings)
+
+    results = await asyncio.gather(*[run_case(pipeline, c) for c in dataset["cases"]])
+
+    passed = sum(1 for r in results if r.passed)
+    total = len(results)
+    print(f"\nResults: {passed}/{total} passed ({passed/total*100:.1f}%)\n")
+
+    for r in results:
+        status = "✓" if r.passed else "✗"
+        print(f"  {status} [{r.case_id}] {r.query[:60]}")
+        for f in r.failures:
+            print(f"      → {f}")
+
+    # Save results
+    RESULTS_DIR.mkdir(exist_ok=True)
+    output = {
+        "passed": passed,
+        "total": total,
+        "results": [vars(r) for r in results],
+    }
+    (RESULTS_DIR / "latest.json").write_text(json.dumps(output, indent=2))
+    print(f"\nResults saved to {RESULTS_DIR}/latest.json")
+
+
+if __name__ == "__main__":
+    asyncio.run(run_eval())

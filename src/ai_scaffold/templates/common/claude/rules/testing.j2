@@ -1,0 +1,33 @@
+# Testing Rules
+
+## Framework
+
+- pytest with `pytest-cov` for coverage
+- `httpx.AsyncClient` for FastAPI integration tests
+- `pytest-asyncio` with `asyncio_mode = "auto"` (set in pyproject.toml)
+
+## Structure
+
+```
+tests/
+├── conftest.py          Shared fixtures (app client, settings overrides)
+├── test_retrieval.py    Retrieval pipeline tests
+├── test_cache.py        Semantic cache tests
+└── test_routing.py      Query routing tests
+```
+
+## Rules
+
+- Each test function tests exactly one behaviour
+- Test names: `test_<what>_<condition>_<expected_result>`
+- Use real services where fast; mock only external HTTP calls and LLM APIs
+- Every new feature needs at least one happy-path and one error-path test
+- Target: >80% coverage on `app/`
+
+## Running Tests
+
+```bash
+uv run pytest                          # all tests
+uv run pytest tests/test_retrieval.py  # single file
+uv run pytest --cov=app --cov-report=term-missing
+```

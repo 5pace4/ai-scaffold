@@ -1,0 +1,19 @@
+"""Code search tool — search a codebase or GitHub for relevant code snippets."""
+from __future__ import annotations
+
+from langchain_core.tools import tool
+
+
+@tool
+async def code_search(query: str, language: str = "python") -> str:
+    """Search for code snippets matching the query.
+
+    Args:
+        query: The code search query.
+        language: Programming language filter (default: python).
+
+    Returns:
+        Relevant code snippets and their sources.
+    """
+    # Integrate with GitHub Code Search, Sourcegraph, or a local index
+    return f"[code_search stub] Snippets for '{query}' in {language}"

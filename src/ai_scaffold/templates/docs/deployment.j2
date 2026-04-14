@@ -1,0 +1,61 @@
+# {{ project_name }} — Deployment Guide
+
+## Local Development
+
+```bash
+cp .env.example .env   # fill in API keys
+uv sync
+uv run uvicorn app.main:app --reload
+```
+
+## Docker Compose
+
+```bash
+cp .env.example .env
+docker compose up --build
+```
+
+Services started:
+- API: http://localhost:8000
+{% if include_frontend %}
+- Frontend: http://localhost:7860
+{% endif %}
+{% if vector_db == "chroma" %}
+- ChromaDB: http://localhost:8001
+{% elif vector_db == "qdrant" %}
+- Qdrant: http://localhost:6333
+{% elif vector_db == "pgvector" %}
+- PostgreSQL: localhost:5432
+{% endif %}
+
+## Production Checklist
+
+- [ ] Set `DEBUG=false` in `.env`
+- [ ] Use secrets manager (AWS Secrets Manager, Vault) instead of `.env`
+- [ ] Set `ALLOWED_ORIGINS` to your frontend domain
+- [ ] Enable structured logging (replace `print` with `logging`)
+- [ ] Set up monitoring (Prometheus + Grafana, or Datadog)
+- [ ] Configure autoscaling on the API service
+- [ ] Set up a CI/CD pipeline (see `.github/workflows/`)
+
+## Environment Variables Reference
+
+| Variable | Required | Description |
+|---|---|---|
+{% if llm_provider == "openai" %}
+| `OPENAI_API_KEY` | ✓ | OpenAI API key |
+{% elif llm_provider == "anthropic" %}
+| `ANTHROPIC_API_KEY` | ✓ | Anthropic API key |
+{% elif llm_provider == "groq" %}
+| `GROQ_API_KEY` | ✓ | Groq API key |
+{% elif llm_provider == "azure-openai" %}
+| `AZURE_OPENAI_API_KEY` | ✓ | Azure OpenAI API key |
+| `AZURE_OPENAI_ENDPOINT` | ✓ | Azure OpenAI endpoint URL |
+{% endif %}
+{% if vector_db == "pinecone" %}
+| `PINECONE_API_KEY` | ✓ | Pinecone API key |
+{% elif vector_db == "pgvector" %}
+| `DATABASE_URL` | ✓ | PostgreSQL connection string |
+{% endif %}
+| `DEBUG` | — | Enable debug mode (default: false) |
+| `LOG_LEVEL` | — | Logging level (default: INFO) |

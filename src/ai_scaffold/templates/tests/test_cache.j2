@@ -1,0 +1,59 @@
+"""Tests for the semantic cache."""
+from __future__ import annotations
+
+import tempfile
+from pathlib import Path
+from unittest.mock import patch
+
+import pytest
+
+
+@pytest.mark.asyncio
+async def test_cache_miss_returns_none():
+    with tempfile.TemporaryDirectory() as tmp:
+        with patch("app.services.semantic_cache.SemanticCache.CACHE_DIR", Path(tmp)):
+            from app.config import settings
+            from app.services.semantic_cache import SemanticCache
+
+            cache = SemanticCache.__new__(SemanticCache)
+            cache.settings = settings
+            cache.CACHE_DIR = Path(tmp)
+            cache._embeddings = None
+
+            result = await cache.get("query with no cache entry")
+            assert result is None
+
+
+@pytest.mark.asyncio
+async def test_cache_set_and_get():
+    with tempfile.TemporaryDirectory() as tmp:
+        with patch("app.services.semantic_cache.SemanticCache.CACHE_DIR", Path(tmp)):
+            from app.config import settings
+            from app.services.semantic_cache import SemanticCache
+
+            cache = SemanticCache.__new__(SemanticCache)
+            cache.settings = settings
+            cache.CACHE_DIR = Path(tmp)
+            cache._embeddings = None
+
+            await cache.set("hello world", "cached answer")
+            result = await cache.get("hello world")
+            assert result == "cached answer"
+
+
+@pytest.mark.asyncio
+async def test_cache_invalidate():
+    with tempfile.TemporaryDirectory() as tmp:
+        with patch("app.services.semantic_cache.SemanticCache.CACHE_DIR", Path(tmp)):
+            from app.config import settings
+            from app.services.semantic_cache import SemanticCache
+
+            cache = SemanticCache.__new__(SemanticCache)
+            cache.settings = settings
+            cache.CACHE_DIR = Path(tmp)
+            cache._embeddings = None
+
+            await cache.set("test query", "some answer")
+            await cache.invalidate("test query")
+            result = await cache.get("test query")
+            assert result is None

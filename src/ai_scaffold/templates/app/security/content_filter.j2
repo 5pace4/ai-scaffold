@@ -1,0 +1,25 @@
+"""Content filter: screen retrieved documents before including in context."""
+from __future__ import annotations
+
+from langchain_core.documents import Document
+
+
+_BLOCKED_TERMS: set[str] = set()  # Populate from config or DB
+
+
+class ContentFilter:
+    """Second layer: filters retrieved documents for policy compliance."""
+
+    def __init__(self, blocked_terms: set[str] | None = None) -> None:
+        self._blocked = blocked_terms or _BLOCKED_TERMS
+
+    def filter(self, documents: list[Document]) -> list[Document]:
+        """Return only documents that pass content policy."""
+        return [doc for doc in documents if self._is_safe(doc)]
+
+    def _is_safe(self, doc: Document) -> bool:
+        content_lower = doc.page_content.lower()
+        return not any(term.lower() in content_lower for term in self._blocked)
+
+    def add_blocked_term(self, term: str) -> None:
+        self._blocked.add(term)

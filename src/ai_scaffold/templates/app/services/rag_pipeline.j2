@@ -1,0 +1,74 @@
+"""End-to-end RAG pipeline: retrieve → rerank → generate."""
+from __future__ import annotations
+
+from langchain_core.prompts import ChatPromptTemplate
+
+from app.components.hybrid_retriever import HybridRetriever
+from app.components.reranker import Reranker
+from app.config import Settings
+from app.models import SourceDocument
+from app.services.semantic_cache import SemanticCache
+from app.services.query_rewriter import QueryRewriter
+
+
+class RAGPipeline:
+    def __init__(self, settings: Settings) -> None:
+        self.settings = settings
+        self.retriever = HybridRetriever(settings)
+        self.reranker = Reranker(settings)
+        self.cache = SemanticCache(settings)
+        self.rewriter = QueryRewriter(settings)
+        self._llm = self._build_llm()
+
+    def _build_llm(self):
+{% if llm_provider == "openai" %}
+        from langchain_openai import ChatOpenAI
+        return ChatOpenAI(model=self.settings.llm_model, api_key=self.settings.openai_api_key)
+{% elif llm_provider == "anthropic" %}
+        from langchain_anthropic import ChatAnthropic
+        return ChatAnthropic(model=self.settings.llm_model, api_key=self.settings.anthropic_api_key)
+{% elif llm_provider == "groq" %}
+        from langchain_groq import ChatGroq
+        return ChatGroq(model=self.settings.llm_model, api_key=self.settings.groq_api_key)
+{% elif llm_provider == "ollama" %}
+        from langchain_ollama import ChatOllama
+        return ChatOllama(model=self.settings.llm_model, base_url=self.settings.ollama_base_url)
+{% elif llm_provider == "azure-openai" %}
+        from langchain_openai import AzureChatOpenAI
+        return AzureChatOpenAI(
+            azure_deployment=self.settings.azure_openai_deployment,
+            api_key=self.settings.azure_openai_api_key,
+            azure_endpoint=self.settings.azure_openai_endpoint,
+        )
+{% endif %}
+
+    _PROMPT = ChatPromptTemplate.from_messages([
+        ("system", "You are a helpful assistant. Answer using only the provided context.\n\nContext:\n{context}"),
+        ("human", "{question}"),
+    ])
+
+    async def run(self, query: str, session_id: str | None = None) -> str:
+        # 1. Check semantic cache
+        cached = await self.cache.get(query)
+        if cached:
+            return cached
+
+        # 2. Rewrite query for better retrieval
+        rewritten = await self.rewriter.rewrite(query)
+
+        # 3. Retrieve relevant documents
+        result = await self.retriever.retrieve(rewritten)
+
+        # 4. Rerank for precision
+        top_docs = await self.reranker.rerank(query, result.documents, top_k=3)
+
+        # 5. Build context and generate answer
+        context = "\n\n".join(doc.page_content for doc in top_docs)
+        chain = self._PROMPT | self._llm
+        response = await chain.ainvoke({"context": context, "question": query})
+        answer: str = response.content  # type: ignore[assignment]
+
+        # 6. Store in cache
+        await self.cache.set(query, answer)
+
+        return answer

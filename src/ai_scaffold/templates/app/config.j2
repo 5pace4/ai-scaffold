@@ -1,0 +1,60 @@
+from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
+    # ── App ───────────────────────────────────────────────────────────────────
+    app_name: str = "{{ project_name }}"
+    debug: bool = False
+    log_level: str = "INFO"
+
+    # ── LLM ───────────────────────────────────────────────────────────────────
+{% if llm_provider == "openai" %}
+    openai_api_key: str = Field(..., alias="OPENAI_API_KEY")
+    llm_model: str = "{{ llm_model }}"
+{% elif llm_provider == "anthropic" %}
+    anthropic_api_key: str = Field(..., alias="ANTHROPIC_API_KEY")
+    llm_model: str = "{{ llm_model }}"
+{% elif llm_provider == "groq" %}
+    groq_api_key: str = Field(..., alias="GROQ_API_KEY")
+    llm_model: str = "{{ llm_model }}"
+{% elif llm_provider == "ollama" %}
+    ollama_base_url: str = "http://localhost:11434"
+    llm_model: str = "{{ llm_model }}"
+{% elif llm_provider == "azure-openai" %}
+    azure_openai_api_key: str = Field(..., alias="AZURE_OPENAI_API_KEY")
+    azure_openai_endpoint: str = Field(..., alias="AZURE_OPENAI_ENDPOINT")
+    azure_openai_deployment: str = "{{ llm_model }}"
+    llm_model: str = "{{ llm_model }}"
+{% endif %}
+
+    # ── Embeddings ────────────────────────────────────────────────────────────
+    embedding_model: str = "{{ embedding_model }}"
+
+    # ── Vector DB ─────────────────────────────────────────────────────────────
+{% if vector_db == "chroma" %}
+    chroma_host: str = "localhost"
+    chroma_port: int = 8001
+    chroma_collection: str = "{{ package_name }}"
+{% elif vector_db == "qdrant" %}
+    qdrant_url: str = "http://localhost:6333"
+    qdrant_collection: str = "{{ package_name }}"
+{% elif vector_db == "pinecone" %}
+    pinecone_api_key: str = Field(..., alias="PINECONE_API_KEY")
+    pinecone_index: str = "{{ package_name }}"
+    pinecone_environment: str = "us-east-1-aws"
+{% elif vector_db == "weaviate" %}
+    weaviate_url: str = "http://localhost:8080"
+    weaviate_class_name: str = "{{ package_name | capitalize }}"
+{% elif vector_db == "pgvector" %}
+    database_url: str = Field(..., alias="DATABASE_URL")
+{% endif %}
+
+
+settings = Settings()  # type: ignore[call-arg]

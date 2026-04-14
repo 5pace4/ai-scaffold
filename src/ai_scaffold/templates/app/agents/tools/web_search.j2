@@ -1,0 +1,23 @@
+"""Web search tool — pluggable tool definition."""
+from __future__ import annotations
+
+from langchain_core.tools import tool
+
+
+@tool
+async def web_search(query: str) -> str:
+    """Search the web for current information about the given query.
+
+    Args:
+        query: The search query string.
+
+    Returns:
+        A summary of the top search results.
+    """
+    # Replace with your preferred search API (Tavily, SerpAPI, DuckDuckGo, etc.)
+    # Example with httpx:
+    # import httpx
+    # async with httpx.AsyncClient() as client:
+    #     resp = await client.get("https://api.tavily.com/search", params={"query": query, "api_key": "..."})
+    #     return resp.json()["answer"]
+    return f"[web_search stub] Results for: {query}"

@@ -1,0 +1,38 @@
+"""Gradio frontend for {{ project_name }}."""
+from __future__ import annotations
+
+import os
+
+import gradio as gr
+import httpx
+
+API_URL = os.getenv("API_URL", "http://localhost:8000")
+
+
+async def query_api(message: str, history: list) -> str:
+    async with httpx.AsyncClient() as client:
+        try:
+            resp = await client.post(
+                f"{API_URL}/query",
+                json={"query": message},
+                timeout=30,
+            )
+            resp.raise_for_status()
+            return resp.json()["answer"]
+        except httpx.HTTPError as e:
+            return f"Error: {e}"
+
+
+demo = gr.ChatInterface(
+    fn=query_api,
+    title="{{ project_name }}",
+    description="Ask questions powered by {{ llm_provider }} + {{ vector_db }}",
+    theme=gr.themes.Soft(),
+    examples=[
+        "What can you help me with?",
+        "Give me a summary of the available information.",
+    ],
+)
+
+if __name__ == "__main__":
+    demo.launch(server_name="0.0.0.0", server_port=7860)
