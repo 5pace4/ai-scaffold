@@ -81,10 +81,6 @@ class ProjectContext(BaseModel):
     def resolved_deps(self) -> list[str]:
         """Return minimal deps for the generated project."""
         base = [
-            "fastapi>=0.115",
             "uvicorn[standard]>=0.30",
-            "pydantic>=2",
-            "pydantic-settings>=2",
-            "python-dotenv>=1",
         ]
         return base + LLM_DEPS.get(self.llm_provider, []) + VECTOR_DB_DEPS.get(self.vector_db, []) + self.extra_deps
