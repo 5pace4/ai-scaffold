@@ -117,7 +117,7 @@ def _print_success(context: ProjectContext, project_root: Path) -> None:
         f"  [bold]cd {context.project_name}[/bold]",
         "  [bold]cp .env.example .env[/bold]  and fill in your API keys",
         "  [bold]uv sync[/bold]  (or pip install -r requirements.txt)",
-        "  [bold]uvicorn src.main:app --reload[/bold]",
+        "  [bold]python src/main.py[/bold]",
     ]
 
     db_line = f"[cyan]{context.vector_db}[/cyan]" if context.vector_db != "none" else "[dim]none[/dim]"
