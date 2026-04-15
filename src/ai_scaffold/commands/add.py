@@ -56,15 +56,20 @@ def run_add(component: str, project_dir: str) -> None:
         )
         raise typer.Exit(1)
 
-    root = Path(project_dir).resolve()
-    pyproject = root / "pyproject.toml"
+    start = Path(project_dir).resolve()
+    root = next(
+        (p for p in [start, *start.parents] if (p / "pyproject.toml").exists()),
+        None,
+    )
 
-    if not pyproject.exists():
+    if root is None:
         console.print(
-            f"[red]Error:[/red] No pyproject.toml found in '{root}'. "
+            f"[red]Error:[/red] No pyproject.toml found in '{start}' or any parent directory. "
             "Run this command from inside a create-ai-project project."
         )
         raise typer.Exit(1)
+
+    pyproject = root / "pyproject.toml"
 
     # Read scaffold metadata from pyproject.toml
     with open(pyproject, "rb") as f:
