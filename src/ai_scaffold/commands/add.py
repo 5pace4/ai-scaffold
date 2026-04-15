@@ -111,15 +111,15 @@ def run_add(component: str, project_dir: str) -> None:
         entry = MANIFEST_MAP[key]
         if not should_include(entry, context):
             continue
-        # Place files relative to cwd, using only the last path component(s)
-        dest = cwd / Path(entry.output_path).name
+        # Place files inside cwd/<component>/<filename>
+        dest = cwd / component / Path(entry.output_path).name
         if dest.exists():
-            console.print(f"[yellow]Skip[/yellow]  {dest.name} (already exists)")
+            console.print(f"[yellow]Skip[/yellow]  {component}/{dest.name} (already exists)")
             continue
         content = engine.render(key, context)
         dest.parent.mkdir(parents=True, exist_ok=True)
         dest.write_text(content, encoding="utf-8")
-        console.print(f"[green]✓[/green]  {dest.name}")
+        console.print(f"[green]✓[/green]  {component}/{dest.name}")
         written += 1
 
     if written == 0:

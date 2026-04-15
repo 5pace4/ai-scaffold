@@ -56,7 +56,7 @@ class ProjectContext(BaseModel):
     include_git: bool = True
     author_name: str = ""
     author_email: str = ""
-    scaffold_version: str = "0.1.4"
+    scaffold_version: str = "0.2.5"
     extra_deps: list[str] = Field(default_factory=list)
 
     @field_validator("package_name", mode="before")

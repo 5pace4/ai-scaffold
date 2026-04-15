@@ -5,7 +5,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), [Semantic Vers
 
 ## [Unreleased]
 
-## [0.1.4] - 2026-04-15
+## [0.2.5] - 2026-04-15
 
 ### Added
 - `create-ai-project new <name>` command with interactive wizard
