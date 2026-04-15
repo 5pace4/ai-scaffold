@@ -17,7 +17,6 @@ console = Console(legacy_windows=False)
 
 _MINIMAL_FILES: list[str] = [
     "src/__init__.py",
-    "src/main.py",
     "src/configs/__init__.py",
     "src/configs/config.py",
     "src/utils/__init__.py",
@@ -29,7 +28,6 @@ _MINIMAL_FILES: list[str] = [
 
 _RAG_FILES: list[str] = [
     "src/__init__.py",
-    "src/main.py",
     "src/configs/__init__.py",
     "src/configs/config.py",
     "src/dependencies.py",
@@ -83,7 +81,6 @@ _RAG_FILES: list[str] = [
 
 _AGENT_FILES: list[str] = [
     "src/__init__.py",
-    "src/main.py",
     "src/configs/__init__.py",
     "src/configs/config.py",
     "src/dependencies.py",

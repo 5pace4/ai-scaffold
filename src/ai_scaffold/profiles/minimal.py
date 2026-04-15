@@ -9,6 +9,7 @@ MINIMAL_MANIFEST = [
     "common.requirements",
     "common.claude_rules_code_style",
     "common.claude_rules_testing",
+    "src.main",
 ]
 
 register_profile(

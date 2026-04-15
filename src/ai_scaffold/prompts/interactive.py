@@ -10,7 +10,7 @@ from ai_scaffold.generator.context import (
     ProjectContext,
 )
 
-console = Console()
+console = Console(legacy_windows=False)
 
 
 def run_wizard(
@@ -21,9 +21,9 @@ def run_wizard(
     include_docker: bool = True,
     include_frontend: bool = True,
     include_git: bool = True,
-    include_uv: bool = True,
     author_name: str = "",
     author_email: str = "",
+    description: str = "",
 ) -> ProjectContext:
     """Run the interactive setup wizard and return a fully populated ProjectContext."""
     console.print(
@@ -33,6 +33,7 @@ def run_wizard(
         )
     )
 
+    # ── LLM provider ──────────────────────────────────────────────────────────
     if llm_provider is None:
         llm_provider = questionary.select(
             "LLM provider?",
@@ -42,24 +43,70 @@ def run_wizard(
         if llm_provider is None:
             raise KeyboardInterrupt
 
+    # ── LLM model ─────────────────────────────────────────────────────────────
+    default_model = DEFAULT_MODEL.get(llm_provider, "none")
+    if llm_provider != "none":
+        llm_model = questionary.text(
+            "LLM model?",
+            default=default_model,
+        ).ask()
+        if llm_model is None:
+            raise KeyboardInterrupt
+        llm_model = llm_model.strip() or default_model
+    else:
+        llm_model = "none"
+
+    # ── Vector DB ─────────────────────────────────────────────────────────────
     if vector_db is None:
         vector_db = questionary.select(
             "Vector database?",
             choices=VECTOR_DBS,
-            default="chroma",
+            default="none",
         ).ask()
         if vector_db is None:
             raise KeyboardInterrupt
 
-    default_embedding = DEFAULT_EMBEDDING.get(llm_provider, "text-embedding-3-small")
-    embedding_model = questionary.text(
-        "Embedding model?",
-        default=default_embedding,
-    ).ask()
-    if embedding_model is None:
-        raise KeyboardInterrupt
+    # ── Embedding model ───────────────────────────────────────────────────────
+    default_embedding = DEFAULT_EMBEDDING.get(llm_provider, "none")
+    if llm_provider != "none" or vector_db != "none":
+        embedding_model = questionary.text(
+            "Embedding model?",
+            default=default_embedding,
+        ).ask()
+        if embedding_model is None:
+            raise KeyboardInterrupt
+        embedding_model = embedding_model.strip() or default_embedding
+    else:
+        embedding_model = "none"
 
-    llm_model = DEFAULT_MODEL.get(llm_provider, "gpt-4o")
+    # ── Project description ───────────────────────────────────────────────────
+    if not description:
+        description = questionary.text(
+            "Project description?",
+            default=f"{project_name} — AI application",
+        ).ask()
+        if description is None:
+            raise KeyboardInterrupt
+        description = description.strip() or f"{project_name} — AI application"
+
+    # ── Author ────────────────────────────────────────────────────────────────
+    if not author_name:
+        author_name = questionary.text(
+            "Author name? (leave blank to skip)",
+            default="",
+        ).ask()
+        if author_name is None:
+            raise KeyboardInterrupt
+        author_name = author_name.strip()
+
+    if author_name and not author_email:
+        author_email = questionary.text(
+            "Author email? (leave blank to skip)",
+            default="",
+        ).ask()
+        if author_email is None:
+            raise KeyboardInterrupt
+        author_email = author_email.strip()
 
     return ProjectContext(
         project_name=project_name,
@@ -69,10 +116,10 @@ def run_wizard(
         vector_db=vector_db,
         embedding_model=embedding_model,
         llm_model=llm_model,
+        description=description,
         include_docker=include_docker,
         include_frontend=include_frontend,
         include_git=include_git,
-        include_uv=include_uv,
         author_name=author_name,
         author_email=author_email,
     )
@@ -86,13 +133,13 @@ def build_context_with_defaults(
     include_docker: bool = True,
     include_frontend: bool = True,
     include_git: bool = True,
-    include_uv: bool = True,
     author_name: str = "",
     author_email: str = "",
+    description: str = "",
 ) -> ProjectContext:
     """Build a ProjectContext using defaults (no interactive prompts)."""
-    resolved_llm = llm_provider or "openai"
-    resolved_db = vector_db or "chroma"
+    resolved_llm = llm_provider or "none"
+    resolved_db = vector_db or "none"
 
     return ProjectContext(
         project_name=project_name,
@@ -100,12 +147,12 @@ def build_context_with_defaults(
         profile=profile,
         llm_provider=resolved_llm,
         vector_db=resolved_db,
-        embedding_model=DEFAULT_EMBEDDING.get(resolved_llm, "text-embedding-3-small"),
-        llm_model=DEFAULT_MODEL.get(resolved_llm, "gpt-4o"),
+        embedding_model=DEFAULT_EMBEDDING.get(resolved_llm, "none"),
+        llm_model=DEFAULT_MODEL.get(resolved_llm, "none"),
+        description=description or f"{project_name} — AI application",
         include_docker=include_docker,
         include_frontend=include_frontend,
         include_git=include_git,
-        include_uv=include_uv,
         author_name=author_name,
         author_email=author_email,
     )

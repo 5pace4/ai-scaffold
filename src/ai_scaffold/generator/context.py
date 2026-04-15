@@ -1,39 +1,42 @@
 from pydantic import BaseModel, Field, field_validator
 
-LLM_PROVIDERS = ["openai", "anthropic", "groq", "ollama", "azure-openai"]
+LLM_PROVIDERS = ["openai", "anthropic", "groq", "ollama", "azure-openai", "none"]
 VECTOR_DBS = ["chroma", "qdrant", "pinecone", "weaviate", "pgvector", "none"]
 
 DEFAULT_EMBEDDING: dict[str, str] = {
     "openai": "text-embedding-3-small",
     "anthropic": "text-embedding-3-small",
-    "groq": "text-embedding-3-small",
+    "groq": "nomic-embed-text",
     "ollama": "nomic-embed-text",
-    "azure-openai": "text-embedding-3-small",
+    "azure-openai": "text-embedding-ada-002",
+    "none": "none",
 }
 
 DEFAULT_MODEL: dict[str, str] = {
-    "openai": "gpt-4o",
-    "anthropic": "claude-sonnet-4-5",
-    "groq": "llama-3.3-70b-versatile",
+    "openai": "gpt-4o-mini",
+    "anthropic": "claude-haiku-4-5-20251001",
+    "groq": "llama-3.1-8b-instant",
     "ollama": "llama3.2",
-    "azure-openai": "gpt-4o",
+    "azure-openai": "gpt-4o-mini",
+    "none": "none",
 }
 
-# Deps added to generated project's pyproject.toml per provider/db
+# Only direct SDK deps — no langchain
 LLM_DEPS: dict[str, list[str]] = {
-    "openai": ["openai>=1.50", "langchain-openai>=0.2"],
-    "anthropic": ["anthropic>=0.37", "langchain-anthropic>=0.2"],
-    "groq": ["groq>=0.11", "langchain-groq>=0.2"],
-    "ollama": ["ollama>=0.3", "langchain-ollama>=0.2"],
-    "azure-openai": ["openai>=1.50", "langchain-openai>=0.2"],
+    "openai": ["openai>=1.50"],
+    "anthropic": ["anthropic>=0.37"],
+    "groq": ["groq>=0.11"],
+    "ollama": ["ollama>=0.3"],
+    "azure-openai": ["openai>=1.50"],
+    "none": [],
 }
 
 VECTOR_DB_DEPS: dict[str, list[str]] = {
     "chroma": ["chromadb>=0.5"],
-    "qdrant": ["qdrant-client>=1.11", "langchain-qdrant>=0.2"],
-    "pinecone": ["pinecone-client>=5", "langchain-pinecone>=0.2"],
-    "weaviate": ["weaviate-client>=4", "langchain-weaviate>=0.0.3"],
-    "pgvector": ["pgvector>=0.3", "psycopg2-binary>=2.9", "langchain-postgres>=0.0.12"],
+    "qdrant": ["qdrant-client>=1.9"],
+    "pinecone": ["pinecone-client>=3"],
+    "weaviate": ["weaviate-client>=4"],
+    "pgvector": ["pgvector>=0.3", "psycopg2-binary>=2.9", "sqlalchemy>=2"],
     "none": [],
 }
 
@@ -46,14 +49,14 @@ class ProjectContext(BaseModel):
     vector_db: str
     embedding_model: str
     llm_model: str
+    description: str = "AI application scaffolded with create-ai-project"
     python_version: str = "3.13"
     include_docker: bool = True
     include_frontend: bool = True
     include_git: bool = True
-    include_uv: bool = True
     author_name: str = ""
     author_email: str = ""
-    scaffold_version: str = "0.1.0"
+    scaffold_version: str = "0.2.0"
     extra_deps: list[str] = Field(default_factory=list)
 
     @field_validator("package_name", mode="before")
@@ -76,16 +79,12 @@ class ProjectContext(BaseModel):
         return v
 
     def resolved_deps(self) -> list[str]:
-        """Return all deps to install in the generated project."""
+        """Return minimal deps for the generated project."""
         base = [
             "fastapi>=0.115",
-            "uvicorn[standard]>=0.32",
+            "uvicorn[standard]>=0.30",
             "pydantic>=2",
             "pydantic-settings>=2",
             "python-dotenv>=1",
-            "langchain>=0.3",
-            "langchain-community>=0.3",
-            "tiktoken>=0.7",
-            "httpx>=0.27",
         ]
         return base + LLM_DEPS.get(self.llm_provider, []) + VECTOR_DB_DEPS.get(self.vector_db, []) + self.extra_deps

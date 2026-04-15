@@ -21,16 +21,16 @@ def run_new(
     include_docker: bool,
     include_frontend: bool,
     include_git: bool,
-    include_uv: bool,
     yes: bool,
     author_name: str,
     author_email: str,
+    description: str,
 ) -> None:
     # ── Validate profile ──────────────────────────────────────────────────────
     if profile not in VALID_PROFILES:
         console.print(
             f"[red]Error:[/red] Unknown profile '{profile}'. "
-            f"Valid profiles: {', '.join(VALID_PROFILES)}"
+            f"Valid: {', '.join(VALID_PROFILES)}"
         )
         raise typer.Exit(1)
 
@@ -59,7 +59,7 @@ def run_new(
         raise typer.Exit(1)
 
     # ── Build ProjectContext ───────────────────────────────────────────────────
-    needs_wizard = (llm is None or vector_db is None) and not yes
+    needs_wizard = not yes
 
     if needs_wizard:
         from ai_scaffold.prompts.interactive import run_wizard
@@ -73,9 +73,9 @@ def run_new(
                 include_docker=include_docker,
                 include_frontend=include_frontend,
                 include_git=include_git,
-                include_uv=include_uv,
                 author_name=author_name,
                 author_email=author_email,
+                description=description,
             )
         except KeyboardInterrupt:
             console.print("\n[yellow]Aborted.[/yellow]")
@@ -91,9 +91,9 @@ def run_new(
             include_docker=include_docker,
             include_frontend=include_frontend,
             include_git=include_git,
-            include_uv=include_uv,
             author_name=author_name,
             author_email=author_email,
+            description=description,
         )
 
     # ── Generate files ────────────────────────────────────────────────────────
@@ -108,36 +108,29 @@ def run_new(
 
         git_init(project_root)
 
-    # ── uv sync ───────────────────────────────────────────────────────────────
-    if include_uv:
-        from ai_scaffold.integrations.uv import setup as uv_setup
-
-        uv_setup(project_root)
-
     # ── Success banner ────────────────────────────────────────────────────────
     _print_success(context, project_root)
 
 
 def _print_success(context: ProjectContext, project_root: Path) -> None:
-    next_steps = [
+    lines = [
         f"  [bold]cd {context.project_name}[/bold]",
-        "  Copy [bold].env.example[/bold] -> [bold].env[/bold] and fill in your API keys",
-        "  [bold]uv run uvicorn app.main:app --reload[/bold]",
+        "  [bold]cp .env.example .env[/bold]  and fill in your API keys",
+        "  [bold]uv sync[/bold]  (or pip install -r requirements.txt)",
+        "  [bold]uvicorn src.main:app --reload[/bold]",
     ]
-    if context.include_frontend:
-        next_steps.append(
-            "  [bold]cd frontend && pip install -r requirements.txt && python app.py[/bold]"
-        )
+
+    db_line = f"[cyan]{context.vector_db}[/cyan]" if context.vector_db != "none" else "[dim]none[/dim]"
+    llm_line = f"[cyan]{context.llm_provider}[/cyan]" if context.llm_provider != "none" else "[dim]none[/dim]"
 
     console.print(
         Panel(
-            f"[bold green]Project '{context.project_name}' created![/bold green]\n\n"
-            + "Profile:    [cyan]" + context.profile + "[/cyan]\n"
-            + "LLM:        [cyan]" + context.llm_provider + "[/cyan]  ("
-            + context.llm_model + ")\n"
-            + "Vector DB:  [cyan]" + context.vector_db + "[/cyan]\n\n"
+            f"[bold green]Project '[bold]{context.project_name}[/bold]' created![/bold green]\n\n"
+            + f"Profile:    [cyan]{context.profile}[/cyan]\n"
+            + f"LLM:        {llm_line}  ({context.llm_model})\n"
+            + f"Vector DB:  {db_line}\n\n"
             + "[bold]Next steps:[/bold]\n"
-            + "\n".join(next_steps),
+            + "\n".join(lines),
             border_style="green",
             title="[bold]create-ai-project[/bold]",
         )

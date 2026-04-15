@@ -32,29 +32,21 @@ def main(
 def new(
     project_name: str = typer.Argument(..., help="Name of the project to create."),
     profile: str = typer.Option(
-        "minimal", "--profile", "-p", help="Project profile: minimal, rag, agent, full."
+        "minimal", "--profile", "-p", help="Profile: minimal, rag, agent, full."
     ),
     llm: str | None = typer.Option(
-        None,
-        "--llm",
-        help="LLM provider: openai, anthropic, groq, ollama, azure-openai.",
+        None, "--llm", help="LLM provider: openai, anthropic, groq, ollama, azure-openai, none.",
     ),
     vector_db: str | None = typer.Option(
-        None,
-        "--vector-db",
-        help="Vector database: chroma, qdrant, pinecone, weaviate, pgvector, none.",
+        None, "--vector-db", help="Vector DB: chroma, qdrant, pinecone, weaviate, pgvector, none.",
     ),
-    no_docker: bool = typer.Option(False, "--no-docker", help="Skip Docker files."),
-    no_frontend: bool = typer.Option(
-        False, "--no-frontend", help="Skip frontend/ directory."
-    ),
+    no_docker: bool = typer.Option(False, "--no-docker", help="Skip Dockerfile."),
+    no_frontend: bool = typer.Option(False, "--no-frontend", help="Skip frontend/ directory."),
     no_git: bool = typer.Option(False, "--no-git", help="Skip git init."),
-    no_uv: bool = typer.Option(False, "--no-uv", help="Skip uv sync in new project."),
-    yes: bool = typer.Option(
-        False, "--yes", "-y", help="Skip interactive prompts, use defaults."
-    ),
+    yes: bool = typer.Option(False, "--yes", "-y", help="Skip wizard, use defaults."),
     author_name: str = typer.Option("", "--author-name", help="Author name."),
     author_email: str = typer.Option("", "--author-email", help="Author email."),
+    description: str = typer.Option("", "--description", help="Project description."),
 ) -> None:
     """Create a new AI project with clean architecture."""
     from ai_scaffold.commands.new import run_new
@@ -67,10 +59,10 @@ def new(
         include_docker=not no_docker,
         include_frontend=not no_frontend,
         include_git=not no_git,
-        include_uv=not no_uv,
         yes=yes,
         author_name=author_name,
         author_email=author_email,
+        description=description,
     )
 
 

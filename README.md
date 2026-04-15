@@ -124,11 +124,12 @@ create-ai-project --version         Show version
 **`new` options**
 
 ```
---profile      rag (default) | minimal | agent | full
---llm          openai | anthropic | groq | ollama | azure-openai
---vector-db    chroma | qdrant | pinecone | weaviate | pgvector
+--profile      minimal (default) | rag | agent | full
+--llm          openai | anthropic | groq | ollama | azure-openai | none
+--vector-db    chroma | qdrant | pinecone | weaviate | pgvector | none
 --no-docker    Skip Dockerfile
 --no-git       Skip git init
+--description  Project description
 -y / --yes     Skip interactive wizard, use defaults
 ```
 
