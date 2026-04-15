@@ -33,6 +33,35 @@ def run_wizard(
         )
     )
 
+    # ── Project description ───────────────────────────────────────────────────
+    if not description:
+        description = questionary.text(
+            "Project description?",
+            default=f"{project_name} — AI application",
+        ).ask()
+        if description is None:
+            raise KeyboardInterrupt
+        description = description.strip() or f"{project_name} — AI application"
+
+    # ── Author ────────────────────────────────────────────────────────────────
+    if not author_name:
+        author_name = questionary.text(
+            "Author name? (leave blank to skip)",
+            default="",
+        ).ask()
+        if author_name is None:
+            raise KeyboardInterrupt
+        author_name = author_name.strip()
+
+    if author_name and not author_email:
+        author_email = questionary.text(
+            "Author email? (leave blank to skip)",
+            default="",
+        ).ask()
+        if author_email is None:
+            raise KeyboardInterrupt
+        author_email = author_email.strip()
+
     # ── LLM provider ──────────────────────────────────────────────────────────
     if llm_provider is None:
         llm_provider = questionary.select(
@@ -78,35 +107,6 @@ def run_wizard(
         embedding_model = embedding_model.strip() or default_embedding
     else:
         embedding_model = "none"
-
-    # ── Project description ───────────────────────────────────────────────────
-    if not description:
-        description = questionary.text(
-            "Project description?",
-            default=f"{project_name} — AI application",
-        ).ask()
-        if description is None:
-            raise KeyboardInterrupt
-        description = description.strip() or f"{project_name} — AI application"
-
-    # ── Author ────────────────────────────────────────────────────────────────
-    if not author_name:
-        author_name = questionary.text(
-            "Author name? (leave blank to skip)",
-            default="",
-        ).ask()
-        if author_name is None:
-            raise KeyboardInterrupt
-        author_name = author_name.strip()
-
-    if author_name and not author_email:
-        author_email = questionary.text(
-            "Author email? (leave blank to skip)",
-            default="",
-        ).ask()
-        if author_email is None:
-            raise KeyboardInterrupt
-        author_email = author_email.strip()
 
     return ProjectContext(
         project_name=project_name,
