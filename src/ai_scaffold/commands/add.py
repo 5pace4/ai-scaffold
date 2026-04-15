@@ -49,29 +49,34 @@ COMPONENT_MANIFEST: dict[str, list[str]] = {
 
 
 def run_add(component: str, project_dir: str) -> None:
-    if component not in ADDABLE_COMPONENTS:
-        console.print(
-            f"[red]Error:[/red] Unknown component '{component}'. "
-            f"Run [bold]create-ai-project list-components[/bold] to see available components."
-        )
-        raise typer.Exit(1)
+    cwd = Path(project_dir).resolve()
 
-    start = Path(project_dir).resolve()
+    # Unknown component → create an empty folder in cwd
+    if component not in ADDABLE_COMPONENTS:
+        new_dir = cwd / component
+        if new_dir.exists():
+            console.print(f"[yellow]Already exists:[/yellow] {new_dir}")
+        else:
+            new_dir.mkdir(parents=True)
+            (new_dir / ".gitkeep").write_text("", encoding="utf-8")
+            console.print(f"[green]✓[/green]  {component}/")
+        return
+
+    # Known component → find project root for template context
     root = next(
-        (p for p in [start, *start.parents] if (p / "pyproject.toml").exists()),
+        (p for p in [cwd, *cwd.parents] if (p / "pyproject.toml").exists()),
         None,
     )
 
     if root is None:
         console.print(
-            f"[red]Error:[/red] No pyproject.toml found in '{start}' or any parent directory. "
+            f"[red]Error:[/red] No pyproject.toml found in '{cwd}' or any parent directory. "
             "Run this command from inside a create-ai-project project."
         )
         raise typer.Exit(1)
 
     pyproject = root / "pyproject.toml"
 
-    # Read scaffold metadata from pyproject.toml
     with open(pyproject, "rb") as f:
         pyproject_data = tomllib.load(f)
 
@@ -106,14 +111,15 @@ def run_add(component: str, project_dir: str) -> None:
         entry = MANIFEST_MAP[key]
         if not should_include(entry, context):
             continue
-        dest = root / entry.output_path
+        # Place files relative to cwd, using only the last path component(s)
+        dest = cwd / Path(entry.output_path).name
         if dest.exists():
-            console.print(f"[yellow]Skip[/yellow]  {entry.output_path} (already exists)")
+            console.print(f"[yellow]Skip[/yellow]  {dest.name} (already exists)")
             continue
         content = engine.render(key, context)
         dest.parent.mkdir(parents=True, exist_ok=True)
         dest.write_text(content, encoding="utf-8")
-        console.print(f"[green]✓[/green]  {entry.output_path}")
+        console.print(f"[green]✓[/green]  {dest.name}")
         written += 1
 
     if written == 0:
