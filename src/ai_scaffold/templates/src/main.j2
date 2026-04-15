@@ -1,9 +1,18 @@
 """{{ project_name }} — entry point."""
 
+import uvicorn
 
-def main() -> None:
-    print("Hello from {{ project_name }}!")
+
+async def app(scope, receive, send):
+    if scope["type"] == "http":
+        body = b"Hello from {{ project_name }}!"
+        await send({
+            "type": "http.response.start",
+            "status": 200,
+            "headers": [[b"content-type", b"text/plain"]],
+        })
+        await send({"type": "http.response.body", "body": body})
 
 
 if __name__ == "__main__":
-    main()
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
